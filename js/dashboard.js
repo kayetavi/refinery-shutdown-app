@@ -19,7 +19,7 @@ const STATUS_FLOW = [
 
 
 // =======================================
-// ⏳ WAITING DAYS SAFE CALCULATION
+// ⏳ WAITING DAYS CALCULATION
 // =======================================
 function calculateWaitingDays(shutdownDate) {
 
@@ -37,7 +37,7 @@ function calculateWaitingDays(shutdownDate) {
 
 
 // =======================================
-// 🧩 LOAD STATUS DROPDOWN
+// 🧩 STATUS DROPDOWN
 // =======================================
 function loadStatusDropdown() {
 
@@ -47,22 +47,26 @@ function loadStatusDropdown() {
   select.innerHTML = `<option value="">Select Workflow Status</option>`;
 
   STATUS_FLOW.forEach((status, index) => {
+
     select.innerHTML += `
       <option value="${status}">
         ${index + 1}. ${status}
-      </option>`;
+      </option>
+    `;
   });
 }
 
 
 // =======================================
-// 🧩 LOAD EQUIPMENT LIST (REAL DATA)
+// 🧩 LOAD EQUIPMENT LIST
 // =======================================
 async function loadEquipmentList() {
 
   const { data, error } = await supabase
-  .from("equipment")
-  .select("unit_id, workflow_status");
+    .from("equipment")
+    .select("tag_number, shutdown_date, workflow_status, unit_id")
+    .order("tag_number", { ascending: true });
+
   if (error) {
     console.error("Equipment Load Error:", error);
     return;
@@ -82,19 +86,20 @@ async function loadEquipmentList() {
         ${eq.tag_number} | 
         ${eq.workflow_status || "Not Started"} | 
         ${waiting}
-      </option>`;
+      </option>
+    `;
   });
 }
 
 
 // =======================================
-// 📊 FULL REAL DASHBOARD
+// 📊 DASHBOARD DATA
 // =======================================
 async function loadDashboard() {
 
   const { data, error } = await supabase
     .from("equipment")
-    .select("unit, workflow_status");
+    .select("unit_id, workflow_status");
 
   if (error) {
     console.error("Dashboard Error:", error);
@@ -105,6 +110,7 @@ async function loadDashboard() {
 
   const totalUnits =
     [...new Set(data.map(e => e.unit_id).filter(Boolean))].length;
+
   const shutdownEquipment =
     data.filter(e => e.workflow_status !== "Closed").length;
 
@@ -120,7 +126,6 @@ async function loadDashboard() {
   const ndtPending =
     data.filter(e => e.workflow_status === "NDT Inspection").length;
 
-  // ===== Update Cards =====
   setText("totalEquipment", totalEquipment);
   setText("totalUnits", totalUnits);
   setText("shutdownCount", shutdownEquipment);
@@ -129,7 +134,6 @@ async function loadDashboard() {
   setText("postCleanCount", postClean);
   setText("ndtPending", ndtPending);
 
-  // ===== Progress Logic =====
   calculateProgress(data);
 }
 
@@ -147,9 +151,8 @@ function calculateProgress(data) {
       e.workflow_status === "Closed"
     ).length;
 
-  const percent = total === 0
-    ? 0
-    : Math.round((completed / total) * 100);
+  const percent =
+    total === 0 ? 0 : Math.round((completed / total) * 100);
 
   const bar = document.querySelector(".progress-fill");
 
@@ -161,7 +164,7 @@ function calculateProgress(data) {
 
 
 // =======================================
-// 🚀 STRICT NEXT STEP
+// 🚀 MOVE NEXT STEP
 // =======================================
 async function moveNextStep() {
 
@@ -177,6 +180,7 @@ async function moveNextStep() {
     .from("equipment")
     .select("*")
     .eq("tag_number", equipNo)
+    .limit(1)
     .single();
 
   if (error || !data) {
@@ -223,7 +227,7 @@ async function moveNextStep() {
 
 
 // =======================================
-// 🛠 CONTROLLED MANUAL UPDATE
+// 🛠 MANUAL STATUS UPDATE
 // =======================================
 async function updateManually() {
 
@@ -267,7 +271,7 @@ async function updateManually() {
 
 
 // =======================================
-// 🔁 HELPER
+// 🔁 HELPER FUNCTIONS
 // =======================================
 function setText(id, value) {
   const el = document.getElementById(id);
@@ -281,7 +285,7 @@ function reloadAll() {
 
 
 // =======================================
-// 🔴 REAL-TIME AUTO REFRESH
+// 🔴 REALTIME AUTO REFRESH
 // =======================================
 supabase
   .channel("equipment-live")
@@ -296,10 +300,12 @@ supabase
 
 
 // =======================================
-// 🔥 INITIAL LOAD
+// 🚀 INITIAL LOAD
 // =======================================
 document.addEventListener("DOMContentLoaded", () => {
+
   loadDashboard();
   loadStatusDropdown();
   loadEquipmentList();
+
 });
