@@ -99,4 +99,4 @@ async function moveNextStep() {
 setInterval(loadDashboard, 10000);
 
 // First Load
-loadDashboard();
+loadDashboard(); 
