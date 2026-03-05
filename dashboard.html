@@ -8,6 +8,7 @@
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
   <h2>Refinery Shutdown Dashboard</h2>
   <div>
@@ -16,21 +17,22 @@
   </div>
 </div>
 
+<!-- DASHBOARD STATUS CARDS -->
 <div class="dashboard-grid">
 
   <div class="card">
-    <h3>Repair Pending</h3>
-    <p id="repairCount">0</p>
+    <h3>Maintenance Started</h3>
+    <p id="maintenanceCount">0</p>
   </div>
 
   <div class="card">
-    <h3>Offered for Cleaning</h3>
-    <p id="offerCount">0</p>
+    <h3>Pre-Cleaning Inspection Pending</h3>
+    <p id="preCleanCount">0</p>
   </div>
 
   <div class="card">
-    <h3>NDT Pending</h3>
-    <p id="ndtCount">0</p>
+    <h3>Post-Cleaning Inspection Pending</h3>
+    <p id="postCleanCount">0</p>
   </div>
 
   <div class="card">
@@ -40,17 +42,35 @@
 
 </div>
 
+<!-- WORKFLOW UPDATE FORM -->
+<div class="card" style="margin:20px;">
+  <h3>Update Equipment Workflow</h3>
+
+  <input type="text" id="equipNo" placeholder="Equipment Number (Example: E-101)">
+
+  <select id="statusSelect"></select>
+
+  <textarea id="observationBox" placeholder="Observation (if any)"></textarea>
+
+  <textarea id="recommendationBox" placeholder="Recommendation (if any)"></textarea>
+
+  <button onclick="updateStatus()">Update Status</button>
+</div>
+
+<!-- ALERT SECTION -->
 <div class="alert-section">
-  <h3>🔔 Latest Alerts</h3>
+  <h3>Latest Alerts</h3>
   <div id="alertBox">No alerts</div>
 </div>
 
+<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/realtime.js"></script>
 
 <script>
+  // 🔐 Secure Dashboard
   async function checkUser() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -59,12 +79,16 @@
   }
   checkUser();
 
+  // 👤 Show Logged User
   async function showUser() {
     const { data: { user } } = await supabase.auth.getUser();
-    document.getElementById("userEmail").innerText = user.email;
+    if (user) {
+      document.getElementById("userEmail").innerText = user.email;
+    }
   }
   showUser();
 
+  // 🚪 Logout
   async function logout() {
     await supabase.auth.signOut();
     window.location.href = "login.html";
