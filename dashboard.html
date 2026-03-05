@@ -1,9 +1,9 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shutdown Dashboard</title>
+  <title>Refinery Shutdown Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -46,22 +46,40 @@
 <div class="card" style="margin:20px;">
   <h3>Update Equipment Workflow</h3>
 
-  <input type="text" id="equipNo" placeholder="Enter Equipment Number (E-101)" style="width:100%;padding:8px;margin-bottom:10px;">
+  <!-- ✅ Equipment Dropdown (No Free Typing) -->
+  <label><b>Select Equipment</b></label>
+  <select id="equipmentSelect" style="width:100%;padding:8px;margin-bottom:5px;">
+    <option value="">Loading equipment...</option>
+  </select>
 
-  <!-- Auto Workflow Dropdown -->
+  <!-- ✅ Current Status Display -->
+  <p id="currentStatusDisplay"
+     style="font-weight:bold; color:#003366; margin-bottom:15px;">
+     Current Status: -
+  </p>
+
+  <!-- Manual Workflow Dropdown -->
+  <label><b>Select Workflow Status (Manual Override)</b></label>
   <select id="statusSelect" style="width:100%;padding:8px;margin-bottom:10px;">
     <option value="">Select Workflow Status</option>
   </select>
 
-  <textarea id="observationBox" placeholder="Observation (if any)"
+  <textarea id="observationBox"
+    placeholder="Observation (if any)"
     style="width:100%;padding:8px;margin-bottom:10px;"></textarea>
 
-  <textarea id="recommendationBox" placeholder="Recommendation (if any)"
+  <textarea id="recommendationBox"
+    placeholder="Recommendation (if any)"
     style="width:100%;padding:8px;margin-bottom:10px;"></textarea>
 
   <div style="display:flex; gap:10px;">
-    <button onclick="moveNextStep()" style="flex:1;">Move to Next Step</button>
-    <button onclick="updateManualStatus()" style="flex:1;">Update Manually</button>
+    <button onclick="moveNextStep()" style="flex:1;">
+      Move to Next Step
+    </button>
+
+    <button onclick="updateManually()" style="flex:1;">
+      Update Manually
+    </button>
   </div>
 
 </div>
@@ -76,7 +94,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/dashboard.js"></script>
-<script src="js/realtime.js"></script>
 
 <script>
   // 🔐 Secure Dashboard
