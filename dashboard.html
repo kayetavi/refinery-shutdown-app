@@ -42,19 +42,28 @@
 
 </div>
 
-<!-- WORKFLOW UPDATE FORM -->
+<!-- WORKFLOW UPDATE SECTION -->
 <div class="card" style="margin:20px;">
   <h3>Update Equipment Workflow</h3>
 
-  <input type="text" id="equipNo" placeholder="Equipment Number (Example: E-101)">
+  <input type="text" id="equipNo" placeholder="Enter Equipment Number (E-101)" style="width:100%;padding:8px;margin-bottom:10px;">
 
-  <select id="statusSelect"></select>
+  <!-- Auto Workflow Dropdown -->
+  <select id="statusSelect" style="width:100%;padding:8px;margin-bottom:10px;">
+    <option value="">Select Workflow Status</option>
+  </select>
 
-  <textarea id="observationBox" placeholder="Observation (if any)"></textarea>
+  <textarea id="observationBox" placeholder="Observation (if any)"
+    style="width:100%;padding:8px;margin-bottom:10px;"></textarea>
 
-  <textarea id="recommendationBox" placeholder="Recommendation (if any)"></textarea>
+  <textarea id="recommendationBox" placeholder="Recommendation (if any)"
+    style="width:100%;padding:8px;margin-bottom:10px;"></textarea>
 
-  <button onclick="updateStatus()">Update Status</button>
+  <div style="display:flex; gap:10px;">
+    <button onclick="moveNextStep()" style="flex:1;">Move to Next Step</button>
+    <button onclick="updateManualStatus()" style="flex:1;">Update Manually</button>
+  </div>
+
 </div>
 
 <!-- ALERT SECTION -->
