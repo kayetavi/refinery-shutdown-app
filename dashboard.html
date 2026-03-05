@@ -8,16 +8,41 @@
 </head>
 <body>
 
-<h2>Shutdown Dashboard</h2>
-
-<button onclick="logout()">Logout</button>
-
-<div class="dashboard-box">
-  Repair Pending: <span id="repairCount">0</span>
+<div class="header">
+  <h2>Refinery Shutdown Dashboard</h2>
+  <div>
+    <span id="userEmail"></span>
+    <button onclick="logout()">Logout</button>
+  </div>
 </div>
 
-<div class="dashboard-box">
-  Offered: <span id="offerCount">0</span>
+<div class="dashboard-grid">
+
+  <div class="card">
+    <h3>Repair Pending</h3>
+    <p id="repairCount">0</p>
+  </div>
+
+  <div class="card">
+    <h3>Offered for Cleaning</h3>
+    <p id="offerCount">0</p>
+  </div>
+
+  <div class="card">
+    <h3>NDT Pending</h3>
+    <p id="ndtCount">0</p>
+  </div>
+
+  <div class="card">
+    <h3>Ready for Box-Up</h3>
+    <p id="boxupCount">0</p>
+  </div>
+
+</div>
+
+<div class="alert-section">
+  <h3>🔔 Latest Alerts</h3>
+  <div id="alertBox">No alerts</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,18 +51,20 @@
 <script src="js/realtime.js"></script>
 
 <script>
-  // 🔐 Route Protection
   async function checkUser() {
     const { data: { session } } = await supabase.auth.getSession();
-
     if (!session) {
       window.location.href = "login.html";
     }
   }
-
   checkUser();
 
-  // 🚪 Logout
+  async function showUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    document.getElementById("userEmail").innerText = user.email;
+  }
+  showUser();
+
   async function logout() {
     await supabase.auth.signOut();
     window.location.href = "login.html";
