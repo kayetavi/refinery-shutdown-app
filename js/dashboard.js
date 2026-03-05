@@ -50,19 +50,26 @@ async function moveNextStep() {
     return;
   }
 
-  // 🔎 Find equipment using correct column name
+  // 🔎 Find equipment (WITHOUT .single())
   const { data, error } = await supabase
     .from("equipment")
     .select("*")
-    .eq("tag_number", equipNo)   // ✅ FIXED
-    .single();
+    .eq("tag_number", equipNo);
 
-  if (error || !data) {
+  if (error) {
+    alert("Database error!");
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
     alert("Equipment not found!");
     return;
   }
 
-  const currentIndex = STATUS_FLOW.indexOf(data.workflow_status);
+  const equipment = data[0];
+
+  const currentIndex = STATUS_FLOW.indexOf(equipment.workflow_status);
 
   if (currentIndex === -1) {
     alert("Invalid workflow status in database");
@@ -76,11 +83,11 @@ async function moveNextStep() {
 
   const nextStatus = STATUS_FLOW[currentIndex + 1];
 
-  // 🔄 Update using correct column name
+  // 🔄 Update status
   const { error: updateError } = await supabase
     .from("equipment")
     .update({ workflow_status: nextStatus })
-    .eq("tag_number", equipNo);   // ✅ FIXED
+    .eq("tag_number", equipNo);
 
   if (updateError) {
     alert("Update failed!");
