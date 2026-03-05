@@ -1,119 +1,127 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Refinery Shutdown Control Panel</title>
-  <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refinery Shutdown Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- ================= HEADER ================= -->
-<header class="main-header">
-  <div class="header-left">
-    🛢 <span>Refinery Shutdown Control Panel</span>
-  </div>
-
-  <div class="header-right">
-    <span id="userEmail" class="user-badge"></span>
-    <button class="logout-btn" onclick="logout()">Logout</button>
+<!-- ================= TOP NAV ================= -->
+<header class="top-nav">
+  <div class="logo">🛢 Refinery Shutdown Dashboard</div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">Units</a>
+    <a href="#">Equipment</a>
+    <a href="#">Reports</a>
+    <a href="#">Admin</a>
+  </nav>
+  <div class="user-area">
+    <span id="userEmail"></span>
+    <button onclick="logout()">Logout</button>
   </div>
 </header>
 
-<!-- ================= DASHBOARD CARDS ================= -->
-<section class="dashboard-container">
+<!-- ================= METRIC CARDS ================= -->
+<section class="metrics">
 
-  <div class="status-card maintenance">
-    <h3>Maintenance Started</h3>
-    <p id="maintenanceCount">0</p>
+  <div class="metric orange">
+    <h4>Total Units</h4>
+    <p>5</p>
   </div>
 
-  <div class="status-card preclean">
-    <h3>Pre-Cleaning Inspection</h3>
-    <p id="preCleanCount">0</p>
+  <div class="metric blue">
+    <h4>Total Equipment</h4>
+    <p>250</p>
   </div>
 
-  <div class="status-card postclean">
-    <h3>Post-Cleaning Inspection</h3>
-    <p id="postCleanCount">0</p>
+  <div class="metric red">
+    <h4>Shutdown Equipment</h4>
+    <p>80</p>
   </div>
 
-  <div class="status-card boxup">
-    <h3>Ready for Box-Up</h3>
-    <p id="boxupCount">0</p>
+  <div class="metric yellow">
+    <h4>Pre-Cleaning Pending</h4>
+    <p>15</p>
+  </div>
+
+  <div class="metric green">
+    <h4>Post-Cleaning Offered</h4>
+    <p>20</p>
+  </div>
+
+  <div class="metric purple">
+    <h4>NDT Pending</h4>
+    <p>10</p>
   </div>
 
 </section>
 
 <!-- ================= MAIN GRID ================= -->
-<section class="main-grid">
+<section class="main-layout">
 
-  <!-- WORKFLOW PANEL -->
-  <div class="panel workflow-panel">
-    <h3>🔄 Equipment Workflow Update</h3>
+  <!-- LEFT ALERTS -->
+  <aside class="alerts-panel">
+    <h3>Alerts & Notifications</h3>
 
-    <label>Select Equipment</label>
-    <select id="equipmentSelect">
-      <option value="">Loading equipment...</option>
-    </select>
+    <div class="alert-item red">Pre-Cleaning Recommendation Pending</div>
+    <div class="alert-item orange">Operation Action Not Completed</div>
+    <div class="alert-item green">Post-Cleaning Offer Received</div>
+    <div class="alert-item blue">NDT Completed</div>
+    <div class="alert-item red">Maintenance Action Required</div>
+    <div class="alert-item green">Ready for Box-Up</div>
+  </aside>
 
-    <label>Current Status</label>
-    <div class="status-display">
-      <span id="currentStatusDisplay">No Equipment Selected</span>
+  <!-- RIGHT CONTENT -->
+  <div class="content-panel">
+
+    <h3>CDU Unit Details Overview</h3>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <label>CDU Unit Progress</label>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:75%;">75%</div>
+      </div>
     </div>
 
-    <label>Manual Override Status</label>
-    <select id="statusSelect">
-      <option value="">Select Workflow Status</option>
-      <option>Maintenance Started</option>
-      <option>Pre-Cleaning Inspection</option>
-      <option>Post-Cleaning Inspection</option>
-      <option>Ready for Box-Up</option>
-    </select>
+    <!-- Equipment Table -->
+    <table class="status-table">
+      <thead>
+        <tr>
+          <th>Tag No</th>
+          <th>Status</th>
+          <th>Waiting Time</th>
+          <th>Operation Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>V-101</td>
+          <td class="badge red">Pre-Cleaning</td>
+          <td>13 Days</td>
+          <td>Offered for Post-Cleaning</td>
+        </tr>
+        <tr>
+          <td>E-202</td>
+          <td class="badge green">Post-Cleaning Offered</td>
+          <td>8 Days</td>
+          <td>Ready for Box-Up</td>
+        </tr>
+        <tr>
+          <td>C-303</td>
+          <td class="badge blue">NDT Completed</td>
+          <td>17 Days</td>
+          <td>Maintenance Pending</td>
+        </tr>
+      </tbody>
+    </table>
 
-    <textarea id="observationBox" placeholder="Observation (if any)"></textarea>
-    <textarea id="recommendationBox" placeholder="Recommendation (if any)"></textarea>
-
-    <div class="button-row">
-      <button class="primary-btn" onclick="moveNextStep()">Move to Next Step</button>
-      <button class="secondary-btn" onclick="updateManually()">Update Manually</button>
-    </div>
-
-  </div>
-
-  <!-- ALERT PANEL -->
-  <div class="panel alert-panel">
-    <h3>⚠ Live Alerts</h3>
-    <div id="alertBox" class="alert-box">
-      No alerts available
-    </div>
   </div>
 
 </section>
-
-<!-- ================= SCRIPTS ================= -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabaseClient.js"></script>
-<script src="js/dashboard.js"></script>
-
-<script>
-  async function checkUser() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) window.location.href = "login.html";
-  }
-  checkUser();
-
-  async function showUser() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) document.getElementById("userEmail").innerText = "👤 " + user.email;
-  }
-  showUser();
-
-  async function logout() {
-    await supabase.auth.signOut();
-    window.location.href = "login.html";
-  }
-</script>
 
 </body>
 </html>
