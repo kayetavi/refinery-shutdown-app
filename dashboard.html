@@ -1,14 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shutdown Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
 <h2>Shutdown Dashboard</h2>
 
+<button onclick="logout()">Logout</button>
+
 <div class="dashboard-box">
-Repair Pending: <span id="repairCount">0</span>
+  Repair Pending: <span id="repairCount">0</span>
 </div>
 
 <div class="dashboard-box">
-Offered: <span id="offerCount">0</span>
+  Offered: <span id="offerCount">0</span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/realtime.js"></script>
+
+<script>
+  // 🔐 Route Protection
+  async function checkUser() {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "login.html";
+    }
+  }
+
+  checkUser();
+
+  // 🚪 Logout
+  async function logout() {
+    await supabase.auth.signOut();
+    window.location.href = "login.html";
+  }
+</script>
+
+</body>
+</html>
