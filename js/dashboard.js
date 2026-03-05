@@ -14,6 +14,22 @@ const STATUS_FLOW = [
 ];
 
 
+// 🧩 Populate Dropdown
+function loadStatusDropdown() {
+
+  const select = document.getElementById("statusSelect");
+
+  select.innerHTML = '<option value="">Select Workflow Status</option>';
+
+  STATUS_FLOW.forEach(status => {
+    const option = document.createElement("option");
+    option.value = status;
+    option.textContent = status;
+    select.appendChild(option);
+  });
+}
+
+
 // 🔄 Load Dashboard Data
 async function loadDashboard() {
 
@@ -50,7 +66,6 @@ async function moveNextStep() {
     return;
   }
 
-  // 🔎 Find equipment (WITHOUT .single())
   const { data, error } = await supabase
     .from("equipment")
     .select("*")
@@ -83,7 +98,6 @@ async function moveNextStep() {
 
   const nextStatus = STATUS_FLOW[currentIndex + 1];
 
-  // 🔄 Update status
   const { error: updateError } = await supabase
     .from("equipment")
     .update({ workflow_status: nextStatus })
@@ -101,8 +115,38 @@ async function moveNextStep() {
 }
 
 
+// 🛠 MANUAL UPDATE FUNCTION
+async function updateManually() {
+
+  const equipNo = document.getElementById("equipNo").value.trim();
+  const selectedStatus = document.getElementById("statusSelect").value;
+
+  if (!equipNo || !selectedStatus) {
+    alert("Enter Equipment Number and Select Status");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("equipment")
+    .update({ workflow_status: selectedStatus })
+    .eq("tag_number", equipNo);
+
+  if (error) {
+    alert("Manual update failed!");
+    console.error(error);
+    return;
+  }
+
+  alert("Status Updated to: " + selectedStatus);
+
+  loadDashboard();
+}
+
+
 // 🔁 Auto Refresh every 10 seconds
 setInterval(loadDashboard, 10000);
 
-// First Load
+
+// 🔥 Initial Load
 loadDashboard();
+loadStatusDropdown();
