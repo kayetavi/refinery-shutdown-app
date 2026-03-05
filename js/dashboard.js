@@ -1,22 +1,10 @@
 // =======================================
-// 🔥 SUPABASE CONNECTION
+// REFINERY SHUTDOWN COMPLETE SYSTEM
 // =======================================
 
-const SUPABASE_URL = "https://lhktmcqjywduohrwsmzb.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
 
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-
-// =======================================
-// 🔥 COMPLETE REFINERY WORKFLOW
-// =======================================
-
+// ================= WORKFLOW =================
 const STATUS_FLOW = [
-
 "Shutdown Completed",
 "Handed Over to Maintenance",
 "Maintenance Started",
@@ -28,22 +16,18 @@ const STATUS_FLOW = [
 "NDT Inspection",
 "Ready for Box-Up",
 "Closed"
-
 ];
 
 
+
 // =======================================
-// ⏳ WAITING DAYS
+// WAITING DAYS
 // =======================================
+function calculateWaitingDays(date){
 
-function calculateWaitingDays(shutdownDate){
+if(!date) return "0 Days";
 
-if(!shutdownDate) return "0 Days";
-
-const today = new Date();
-const shutDate = new Date(shutdownDate);
-
-const diff = today - shutDate;
+const diff = new Date() - new Date(date);
 
 if(diff < 0) return "0 Days";
 
@@ -52,105 +36,28 @@ return Math.floor(diff/(1000*60*60*24))+" Days";
 }
 
 
-// =======================================
-// 🧩 STATUS DROPDOWN
-// =======================================
-
-function loadStatusDropdown(){
-
-const select = document.getElementById("statusSelect");
-
-if(!select) return;
-
-select.innerHTML=`<option value="">Select Workflow Status</option>`;
-
-STATUS_FLOW.forEach((status,index)=>{
-
-select.innerHTML += `
-
-<option value="${status}">
-${index+1}. ${status}
-</option>
-
-`;
-
-});
-
-}
-
 
 // =======================================
-// 🧩 EQUIPMENT DROPDOWN
+// DASHBOARD METRICS
 // =======================================
-
-async function loadEquipmentList(){
-
-const {data,error} = await supabase
-.from("equipment")
-.select("tag_number,shutdown_date,workflow_status,unit_id")
-.order("tag_number",{ascending:true});
-
-if(error){
-
-console.error("Equipment Load Error:",error);
-return;
-
-}
-
-const select = document.getElementById("equipmentSelect");
-
-if(!select) return;
-
-select.innerHTML=`<option value="">Select Equipment</option>`;
-
-data.forEach(eq=>{
-
-const waiting = calculateWaitingDays(eq.shutdown_date);
-
-select.innerHTML += `
-
-<option value="${eq.tag_number}">
-${eq.tag_number} | 
-${eq.workflow_status || "Not Started"} | 
-${waiting}
-</option>
-
-`;
-
-});
-
-}
-
-
-// =======================================
-// 📊 DASHBOARD METRICS
-// =======================================
-
 async function loadDashboard(){
 
-const {data,error} = await supabase
+const {data,error} = await supabaseClient
 .from("equipment")
 .select("unit_id,workflow_status");
 
 if(error){
-
-console.error("Dashboard Error:",error);
+console.log("Dashboard Error",error);
 return;
-
 }
-
-if(!data) return;
 
 const totalEquipment = data.length;
 
 const totalUnits =
 [...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
 
-const shutdownEquipment =
+const shutdownCount =
 data.filter(e=>e.workflow_status!=="Closed").length;
-
-const maintenance =
-data.filter(e=>e.workflow_status==="Maintenance Started").length;
 
 const preClean =
 data.filter(e=>e.workflow_status==="Offered for Pre-Cleaning Inspection").length;
@@ -158,235 +65,195 @@ data.filter(e=>e.workflow_status==="Offered for Pre-Cleaning Inspection").length
 const postClean =
 data.filter(e=>e.workflow_status==="Offered for Post-Cleaning Inspection").length;
 
-const ndtPending =
+const ndt =
 data.filter(e=>e.workflow_status==="NDT Inspection").length;
 
 
-// ===== UPDATE DASHBOARD =====
 
-setText("totalEquipment",totalEquipment);
-setText("totalUnits",totalUnits);
-setText("shutdownCount",shutdownEquipment);
-setText("maintenanceCount",maintenance);
-setText("preCleanCount",preClean);
-setText("postCleanCount",postClean);
-setText("ndtPending",ndtPending);
-
-calculateProgress(data);
-
-}
+document.getElementById("totalUnits").innerText = totalUnits;
+document.getElementById("totalEquipment").innerText = totalEquipment;
+document.getElementById("shutdownCount").innerText = shutdownCount;
+document.getElementById("preCleanCount").innerText = preClean;
+document.getElementById("postCleanCount").innerText = postClean;
+document.getElementById("ndtPending").innerText = ndt;
 
 
-// =======================================
-// 📊 PROGRESS BAR
-// =======================================
 
-function calculateProgress(data){
-
-const total = data.length;
+// progress
 
 const completed =
-data.filter(e=>
+data.filter(e =>
 e.workflow_status==="Ready for Box-Up" ||
 e.workflow_status==="Closed"
 ).length;
 
 const percent =
-total===0 ? 0 :
-Math.round((completed/total)*100);
+totalEquipment===0 ? 0 :
+Math.round((completed/totalEquipment)*100);
 
 const bar = document.querySelector(".progress-fill");
 
 if(bar){
-
 bar.style.width = percent+"%";
 bar.innerText = percent+"%";
-
 }
 
 }
+
 
 
 // =======================================
-// 🚀 MOVE NEXT STEP
+// CDU EQUIPMENT TABLE
 // =======================================
+async function loadCDUTable(){
 
-async function moveNextStep(){
-
-const equipNo =
-document.getElementById("equipmentSelect")?.value;
-
-if(!equipNo){
-
-alert("Select Equipment First");
-return;
-
-}
-
-const {data,error} = await supabase
+const {data,error} = await supabaseClient
 .from("equipment")
-.select("*")
-.eq("tag_number",equipNo)
-.single();
+.select("tag_number,workflow_status,shutdown_date")
+.order("tag_number",{ascending:true});
 
-if(error || !data){
+const table = document.getElementById("cduTableBody");
 
-alert("Equipment Not Found");
-return;
-
-}
-
-const current =
-data.workflow_status || STATUS_FLOW[0];
-
-const index =
-STATUS_FLOW.indexOf(current);
-
-if(index===-1){
-
-alert("Invalid Workflow Status");
-return;
-
-}
-
-if(index===STATUS_FLOW.length-1){
-
-alert("Equipment Already Closed");
-return;
-
-}
-
-const nextStatus = STATUS_FLOW[index+1];
-
-const {error:updateError} = await supabase
-.from("equipment")
-.update({
-
-workflow_status:nextStatus,
-workflow_step:index+1,
-last_updated:new Date()
-
-})
-.eq("tag_number",equipNo);
-
-if(updateError){
-
-alert("Update Failed");
-return;
-
-}
-
-alert("Moved to: "+nextStatus);
-
-reloadAll();
-
-}
-
-
-// =======================================
-// 🛠 MANUAL UPDATE
-// =======================================
-
-async function updateManually(){
-
-const equipNo =
-document.getElementById("equipmentSelect")?.value;
-
-const selected =
-document.getElementById("statusSelect")?.value;
-
-if(!equipNo || !selected){
-
-alert("Select Equipment & Status");
-return;
-
-}
-
-if(selected==="Closed"){
-
-alert("Direct Close Not Allowed");
-return;
-
-}
-
-const stepIndex =
-STATUS_FLOW.indexOf(selected);
-
-const {error} = await supabase
-.from("equipment")
-.update({
-
-workflow_status:selected,
-workflow_step:stepIndex,
-last_updated:new Date()
-
-})
-.eq("tag_number",equipNo);
+table.innerHTML="";
 
 if(error){
-
-alert("Manual Update Failed");
+console.log("Table Error",error);
 return;
-
 }
 
-alert("Status Updated");
+data.forEach(eq=>{
 
-reloadAll();
+table.innerHTML +=`
 
-}
+<tr onclick="openEquipmentDetails('${eq.tag_number}')">
 
+<td>${eq.tag_number}</td>
 
-// =======================================
-// 🔁 HELPERS
-// =======================================
+<td>${eq.workflow_status || "Not Started"}</td>
 
-function setText(id,value){
+<td>${calculateWaitingDays(eq.shutdown_date)}</td>
 
-const el=document.getElementById(id);
+<td>${eq.workflow_status || "-"}</td>
 
-if(el) el.innerText=value;
+</tr>
 
-}
+`;
 
-function reloadAll(){
-
-loadDashboard();
-loadEquipmentList();
+});
 
 }
 
 
+
 // =======================================
-// 🔴 REALTIME AUTO REFRESH
+// ALERT SYSTEM
+// =======================================
+async function loadAlerts(){
+
+const {data,error} = await supabaseClient
+.from("equipment")
+.select("workflow_status");
+
+const alertsBox = document.getElementById("alertsContainer");
+
+alertsBox.innerHTML="";
+
+if(error){
+console.log(error);
+return;
+}
+
+const alertStatuses = [
+
+"Observation Raised",
+"Recommendation Issued",
+"NDT Inspection",
+"Maintenance Started"
+
+];
+
+alertStatuses.forEach(status=>{
+
+const count = data.filter(e=>e.workflow_status===status).length;
+
+if(count>0){
+
+alertsBox.innerHTML +=`
+
+<div class="alert-item red">
+${status} (${count})
+</div>
+
+`;
+
+}
+
+});
+
+}
+
+
+
+// =======================================
+// PAGE NAVIGATION
 // =======================================
 
-supabase
+function openUnits(){
+
+window.location="units.html";
+
+}
+
+function openEquipment(){
+
+window.location="equipment.html";
+
+}
+
+function filterEquipment(status){
+
+window.location=`equipment.html?status=${status}`;
+
+}
+
+function openEquipmentDetails(tag){
+
+window.location=`equipment-details.html?tag=${tag}`;
+
+}
+
+
+
+// =======================================
+// REALTIME UPDATE
+// =======================================
+
+supabaseClient
 .channel("equipment-live")
-
 .on(
 "postgres_changes",
 {event:"*",schema:"public",table:"equipment"},
-payload=>{
+()=>{
 
-console.log("Realtime update:",payload);
-
-reloadAll();
+loadDashboard();
+loadCDUTable();
+loadAlerts();
 
 }
 )
-
 .subscribe();
 
 
+
+
 // =======================================
-// 🚀 INITIAL LOAD
+// INIT
 // =======================================
 
 document.addEventListener("DOMContentLoaded",()=>{
 
 loadDashboard();
-loadStatusDropdown();
-loadEquipmentList();
+loadCDUTable();
+loadAlerts();
 
 });
