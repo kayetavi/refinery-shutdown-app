@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ================= HEADER ================= -->
 <div class="header">
   <h2>Refinery Shutdown Dashboard</h2>
   <div>
@@ -17,62 +17,64 @@
   </div>
 </div>
 
-<!-- DASHBOARD STATUS CARDS -->
+<!-- ================= DASHBOARD STATUS CARDS ================= -->
 <div class="dashboard-grid">
 
-  <div class="card">
+  <div class="card maintenance">
     <h3>Maintenance Started</h3>
     <p id="maintenanceCount">0</p>
   </div>
 
-  <div class="card">
+  <div class="card preclean">
     <h3>Pre-Cleaning Inspection Pending</h3>
     <p id="preCleanCount">0</p>
   </div>
 
-  <div class="card">
+  <div class="card postclean">
     <h3>Post-Cleaning Inspection Pending</h3>
     <p id="postCleanCount">0</p>
   </div>
 
-  <div class="card">
+  <div class="card boxup">
     <h3>Ready for Box-Up</h3>
     <p id="boxupCount">0</p>
   </div>
 
 </div>
 
-<!-- WORKFLOW UPDATE SECTION -->
-<div class="card" style="margin:20px;">
+<!-- ================= WORKFLOW UPDATE SECTION ================= -->
+<div class="workflow-section">
+
   <h3>Update Equipment Workflow</h3>
 
-  <!-- ✅ Equipment Dropdown (No Free Typing) -->
+  <!-- Equipment Dropdown -->
   <label><b>Select Equipment</b></label>
-  <select id="equipmentSelect" style="width:100%;padding:8px;margin-bottom:5px;">
+  <select id="equipmentSelect">
     <option value="">Loading equipment...</option>
   </select>
 
-  <!-- ✅ Current Status Display -->
-  <p id="currentStatusDisplay"
-     style="font-weight:bold; color:#003366; margin-bottom:15px;">
-     Current Status: -
-  </p>
+  <!-- Current Status Badge -->
+  <div>
+    <span class="statusBadge" id="currentStatusDisplay">
+      No Equipment Selected
+    </span>
+  </div>
 
-  <!-- Manual Workflow Dropdown -->
+  <!-- Manual Override -->
   <label><b>Select Workflow Status (Manual Override)</b></label>
-  <select id="statusSelect" style="width:100%;padding:8px;margin-bottom:10px;">
+  <select id="statusSelect">
     <option value="">Select Workflow Status</option>
   </select>
 
   <textarea id="observationBox"
-    placeholder="Observation (if any)"
-    style="width:100%;padding:8px;margin-bottom:10px;"></textarea>
+    placeholder="Observation (if any)">
+  </textarea>
 
   <textarea id="recommendationBox"
-    placeholder="Recommendation (if any)"
-    style="width:100%;padding:8px;margin-bottom:10px;"></textarea>
+    placeholder="Recommendation (if any)">
+  </textarea>
 
-  <div style="display:flex; gap:10px;">
+  <div style="display:flex; gap:10px; margin-top:10px;">
     <button onclick="moveNextStep()" style="flex:1;">
       Move to Next Step
     </button>
@@ -84,13 +86,13 @@
 
 </div>
 
-<!-- ALERT SECTION -->
+<!-- ================= ALERT SECTION ================= -->
 <div class="alert-section">
   <h3>Latest Alerts</h3>
   <div id="alertBox">No alerts</div>
 </div>
 
-<!-- SCRIPTS -->
+<!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/dashboard.js"></script>
