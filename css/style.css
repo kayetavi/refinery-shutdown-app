@@ -1,120 +1,171 @@
-/* Reset */
+/* ================= RESET ================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ================= BODY ================= */
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f9;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #eef2f7, #e3eaf3);
   color: #333;
 }
 
-/* Header */
+/* ================= HEADER ================= */
 .header {
-  background: #1e3a8a;
+  background: linear-gradient(to right, #1e3a8a, #1d4ed8);
   color: white;
-  padding: 15px 25px;
+  padding: 18px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .header h2 {
   font-size: 20px;
+  font-weight: 600;
 }
 
 .header button {
-  background: #2563eb;
-  padding: 6px 14px;
-  border-radius: 5px;
-}
-
-.header button:hover {
-  background: #1d4ed8;
-}
-
-/* Cards Grid */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  padding: 20px;
-}
-
-/* Card */
-.card {
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: #ffffff;
+  color: #1e3a8a;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
   transition: 0.3s;
 }
 
+.header button:hover {
+  background: #e0e7ff;
+}
+
+/* ================= DASHBOARD GRID ================= */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  padding: 25px;
+}
+
+/* ================= CARD ================= */
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: 0.3s ease;
+  position: relative;
+}
+
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-6px);
+}
+
+/* Status Color Borders */
+.card.maintenance {
+  border-left: 6px solid #f59e0b;
+}
+
+.card.preclean {
+  border-left: 6px solid #3b82f6;
+}
+
+.card.postclean {
+  border-left: 6px solid #a855f7;
+}
+
+.card.boxup {
+  border-left: 6px solid #10b981;
 }
 
 .card h3 {
-  margin-bottom: 10px;
-  font-size: 16px;
-  color: #555;
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: #666;
+  font-weight: 600;
 }
 
 .card p {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: bold;
   color: #1e3a8a;
 }
 
-/* Alert Section */
-.alert-section {
+/* ================= WORKFLOW SECTION ================= */
+.workflow-section {
   background: white;
-  margin: 20px;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin: 25px;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-/* Forms */
+/* Status Badge */
+.statusBadge {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 20px;
+  background: #e0e7ff;
+  font-weight: 600;
+  color: #1e3a8a;
+  margin: 12px 0;
+}
+
+/* ================= ALERT SECTION ================= */
+.alert-section {
+  background: white;
+  margin: 25px;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* ================= FORM ELEMENTS ================= */
 input, select, textarea {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 11px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition: 0.2s;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
-/* Buttons */
+/* ================= BUTTON ================= */
 button {
-  padding: 10px 18px;
-  background: #2563eb;
+  padding: 11px 20px;
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
   color: white;
   border: none;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-weight: 600;
   transition: 0.3s;
 }
 
 button:hover {
-  background: #1d4ed8;
+  transform: scale(1.03);
 }
 
-/* Old Dashboard Box Support (optional if using old layout) */
+/* ================= OLD BOX SUPPORT ================= */
 .dashboard-box {
   display: inline-block;
   padding: 20px;
   background: white;
   margin-right: 10px;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   min-width: 150px;
   text-align: center;
   font-weight: bold;
