@@ -3,94 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Refinery Shutdown Dashboard</title>
+  <title>Refinery Shutdown Control Panel</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <!-- ================= HEADER ================= -->
-<div class="header">
-  <h2>Refinery Shutdown Dashboard</h2>
-  <div>
-    <span id="userEmail"></span>
-    <button onclick="logout()">Logout</button>
+<header class="main-header">
+  <div class="header-left">
+    🛢 <span>Refinery Shutdown Control Panel</span>
   </div>
-</div>
 
-<!-- ================= DASHBOARD STATUS CARDS ================= -->
-<div class="dashboard-grid">
+  <div class="header-right">
+    <span id="userEmail" class="user-badge"></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</header>
 
-  <div class="card maintenance">
+<!-- ================= DASHBOARD CARDS ================= -->
+<section class="dashboard-container">
+
+  <div class="status-card maintenance">
     <h3>Maintenance Started</h3>
     <p id="maintenanceCount">0</p>
   </div>
 
-  <div class="card preclean">
-    <h3>Pre-Cleaning Inspection Pending</h3>
+  <div class="status-card preclean">
+    <h3>Pre-Cleaning Inspection</h3>
     <p id="preCleanCount">0</p>
   </div>
 
-  <div class="card postclean">
-    <h3>Post-Cleaning Inspection Pending</h3>
+  <div class="status-card postclean">
+    <h3>Post-Cleaning Inspection</h3>
     <p id="postCleanCount">0</p>
   </div>
 
-  <div class="card boxup">
+  <div class="status-card boxup">
     <h3>Ready for Box-Up</h3>
     <p id="boxupCount">0</p>
   </div>
 
-</div>
+</section>
 
-<!-- ================= WORKFLOW UPDATE SECTION ================= -->
-<div class="workflow-section">
+<!-- ================= MAIN GRID ================= -->
+<section class="main-grid">
 
-  <h3>Update Equipment Workflow</h3>
+  <!-- WORKFLOW PANEL -->
+  <div class="panel workflow-panel">
+    <h3>🔄 Equipment Workflow Update</h3>
 
-  <!-- Equipment Dropdown -->
-  <label><b>Select Equipment</b></label>
-  <select id="equipmentSelect">
-    <option value="">Loading equipment...</option>
-  </select>
+    <label>Select Equipment</label>
+    <select id="equipmentSelect">
+      <option value="">Loading equipment...</option>
+    </select>
 
-  <!-- Current Status Badge -->
-  <div>
-    <span class="statusBadge" id="currentStatusDisplay">
-      No Equipment Selected
-    </span>
+    <label>Current Status</label>
+    <div class="status-display">
+      <span id="currentStatusDisplay">No Equipment Selected</span>
+    </div>
+
+    <label>Manual Override Status</label>
+    <select id="statusSelect">
+      <option value="">Select Workflow Status</option>
+      <option>Maintenance Started</option>
+      <option>Pre-Cleaning Inspection</option>
+      <option>Post-Cleaning Inspection</option>
+      <option>Ready for Box-Up</option>
+    </select>
+
+    <textarea id="observationBox" placeholder="Observation (if any)"></textarea>
+    <textarea id="recommendationBox" placeholder="Recommendation (if any)"></textarea>
+
+    <div class="button-row">
+      <button class="primary-btn" onclick="moveNextStep()">Move to Next Step</button>
+      <button class="secondary-btn" onclick="updateManually()">Update Manually</button>
+    </div>
+
   </div>
 
-  <!-- Manual Override -->
-  <label><b>Select Workflow Status (Manual Override)</b></label>
-  <select id="statusSelect">
-    <option value="">Select Workflow Status</option>
-  </select>
-
-  <textarea id="observationBox"
-    placeholder="Observation (if any)">
-  </textarea>
-
-  <textarea id="recommendationBox"
-    placeholder="Recommendation (if any)">
-  </textarea>
-
-  <div style="display:flex; gap:10px; margin-top:10px;">
-    <button onclick="moveNextStep()" style="flex:1;">
-      Move to Next Step
-    </button>
-
-    <button onclick="updateManually()" style="flex:1;">
-      Update Manually
-    </button>
+  <!-- ALERT PANEL -->
+  <div class="panel alert-panel">
+    <h3>⚠ Live Alerts</h3>
+    <div id="alertBox" class="alert-box">
+      No alerts available
+    </div>
   </div>
 
-</div>
-
-<!-- ================= ALERT SECTION ================= -->
-<div class="alert-section">
-  <h3>Latest Alerts</h3>
-  <div id="alertBox">No alerts</div>
-</div>
+</section>
 
 <!-- ================= SCRIPTS ================= -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -98,25 +97,18 @@
 <script src="js/dashboard.js"></script>
 
 <script>
-  // 🔐 Secure Dashboard
   async function checkUser() {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      window.location.href = "login.html";
-    }
+    if (!session) window.location.href = "login.html";
   }
   checkUser();
 
-  // 👤 Show Logged User
   async function showUser() {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      document.getElementById("userEmail").innerText = user.email;
-    }
+    if (user) document.getElementById("userEmail").innerText = "👤 " + user.email;
   }
   showUser();
 
-  // 🚪 Logout
   async function logout() {
     await supabase.auth.signOut();
     window.location.href = "login.html";
