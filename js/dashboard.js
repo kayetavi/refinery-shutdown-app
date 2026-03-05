@@ -19,6 +19,8 @@ function loadStatusDropdown() {
 
   const select = document.getElementById("statusSelect");
 
+  if (!select) return;
+
   select.innerHTML = '<option value="">Select Workflow Status</option>';
 
   STATUS_FLOW.forEach(status => {
@@ -41,6 +43,8 @@ async function loadDashboard() {
     console.error("Error loading dashboard:", error);
     return;
   }
+
+  if (!data) return;
 
   document.getElementById("maintenanceCount").innerText =
     data.filter(e => e.workflow_status === "Maintenance Started").length;
@@ -84,7 +88,14 @@ async function moveNextStep() {
 
   const equipment = data[0];
 
-  const currentIndex = STATUS_FLOW.indexOf(equipment.workflow_status);
+  let currentStatus = equipment.workflow_status;
+
+  // ✅ If null, start from first stage
+  if (!currentStatus) {
+    currentStatus = STATUS_FLOW[0];
+  }
+
+  const currentIndex = STATUS_FLOW.indexOf(currentStatus);
 
   if (currentIndex === -1) {
     alert("Invalid workflow status in database");
@@ -110,6 +121,8 @@ async function moveNextStep() {
   }
 
   alert("Moved to: " + nextStatus);
+
+  document.getElementById("equipNo").value = "";
 
   loadDashboard();
 }
@@ -139,12 +152,29 @@ async function updateManually() {
 
   alert("Status Updated to: " + selectedStatus);
 
+  document.getElementById("equipNo").value = "";
+  document.getElementById("statusSelect").value = "";
+
   loadDashboard();
 }
 
 
-// 🔁 Auto Refresh every 10 seconds
-setInterval(loadDashboard, 10000);
+// 🔴 REAL TIME LISTENER (PROFESSIONAL)
+supabase
+  .channel('equipment-changes')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'equipment'
+    },
+    (payload) => {
+      console.log("Realtime Change:", payload);
+      loadDashboard();
+    }
+  )
+  .subscribe();
 
 
 // 🔥 Initial Load
