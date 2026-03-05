@@ -14,11 +14,10 @@ const STATUS_FLOW = [
 ];
 
 
-// 🧩 Populate Dropdown
+// 🧩 Populate Workflow Dropdown
 function loadStatusDropdown() {
 
   const select = document.getElementById("statusSelect");
-
   if (!select) return;
 
   select.innerHTML = '<option value="">Select Workflow Status</option>';
@@ -32,19 +31,64 @@ function loadStatusDropdown() {
 }
 
 
-// 🔄 Load Dashboard Data
+// 🧩 Load Equipment Dropdown
+async function loadEquipmentList() {
+
+  const { data, error } = await supabase
+    .from("equipment")
+    .select("tag_number, workflow_status")
+    .order("tag_number", { ascending: true });
+
+  if (error) {
+    console.error("Error loading equipment:", error);
+    return;
+  }
+
+  const select = document.getElementById("equipmentSelect");
+  if (!select) return;
+
+  select.innerHTML = '<option value="">Select Equipment</option>';
+
+  data.forEach(eq => {
+    const option = document.createElement("option");
+    option.value = eq.tag_number;
+    option.textContent = `${eq.tag_number} (${eq.workflow_status || "No Status"})`;
+    select.appendChild(option);
+  });
+}
+
+
+// 🔄 Show Current Status when Equipment Selected
+document.addEventListener("change", async function (e) {
+
+  if (e.target.id === "equipmentSelect") {
+
+    const tag = e.target.value;
+    if (!tag) return;
+
+    const { data } = await supabase
+      .from("equipment")
+      .select("workflow_status")
+      .eq("tag_number", tag)
+      .single();
+
+    document.getElementById("currentStatusDisplay")
+      .innerText = "Current Status: " + (data.workflow_status || "Not Started");
+  }
+});
+
+
+// 🔄 Load Dashboard Counters
 async function loadDashboard() {
 
   const { data, error } = await supabase
     .from("equipment")
-    .select("*");
+    .select("workflow_status");
 
   if (error) {
-    console.error("Error loading dashboard:", error);
+    console.error("Dashboard load error:", error);
     return;
   }
-
-  if (!data) return;
 
   document.getElementById("maintenanceCount").innerText =
     data.filter(e => e.workflow_status === "Maintenance Started").length;
@@ -60,50 +104,38 @@ async function loadDashboard() {
 }
 
 
-// 🚀 MOVE EQUIPMENT TO NEXT STEP
+// 🚀 MOVE TO NEXT STEP (Sequential Only)
 async function moveNextStep() {
 
-  const equipNo = document.getElementById("equipNo").value.trim();
+  const equipNo = document.getElementById("equipmentSelect").value;
 
   if (!equipNo) {
-    alert("Enter Equipment Number");
+    alert("Select Equipment First");
     return;
   }
 
   const { data, error } = await supabase
     .from("equipment")
     .select("*")
-    .eq("tag_number", equipNo);
+    .eq("tag_number", equipNo)
+    .single();
 
-  if (error) {
-    alert("Database error!");
-    console.error(error);
-    return;
-  }
-
-  if (!data || data.length === 0) {
+  if (error || !data) {
     alert("Equipment not found!");
     return;
   }
 
-  const equipment = data[0];
-
-  let currentStatus = equipment.workflow_status;
-
-  // ✅ If null, start from first stage
-  if (!currentStatus) {
-    currentStatus = STATUS_FLOW[0];
-  }
+  let currentStatus = data.workflow_status || STATUS_FLOW[0];
 
   const currentIndex = STATUS_FLOW.indexOf(currentStatus);
 
   if (currentIndex === -1) {
-    alert("Invalid workflow status in database");
+    alert("Invalid workflow status");
     return;
   }
 
   if (currentIndex === STATUS_FLOW.length - 1) {
-    alert("Equipment Already Closed!");
+    alert("Equipment Already Closed");
     return;
   }
 
@@ -115,27 +147,30 @@ async function moveNextStep() {
     .eq("tag_number", equipNo);
 
   if (updateError) {
-    alert("Update failed!");
-    console.error(updateError);
+    alert("Update failed");
     return;
   }
 
   alert("Moved to: " + nextStatus);
 
-  document.getElementById("equipNo").value = "";
-
   loadDashboard();
+  loadEquipmentList();
 }
 
 
-// 🛠 MANUAL UPDATE FUNCTION
+// 🛠 MANUAL UPDATE (Restricted)
 async function updateManually() {
 
-  const equipNo = document.getElementById("equipNo").value.trim();
+  const equipNo = document.getElementById("equipmentSelect").value;
   const selectedStatus = document.getElementById("statusSelect").value;
 
   if (!equipNo || !selectedStatus) {
-    alert("Enter Equipment Number and Select Status");
+    alert("Select equipment and status");
+    return;
+  }
+
+  if (selectedStatus === "Closed") {
+    alert("Direct closing not allowed!");
     return;
   }
 
@@ -145,38 +180,32 @@ async function updateManually() {
     .eq("tag_number", equipNo);
 
   if (error) {
-    alert("Manual update failed!");
-    console.error(error);
+    alert("Manual update failed");
     return;
   }
 
   alert("Status Updated to: " + selectedStatus);
 
-  document.getElementById("equipNo").value = "";
-  document.getElementById("statusSelect").value = "";
-
   loadDashboard();
+  loadEquipmentList();
 }
 
 
-// 🔴 REAL TIME LISTENER (PROFESSIONAL)
+// 🔴 REAL-TIME LISTENER
 supabase
-  .channel('equipment-changes')
+  .channel("equipment-changes")
   .on(
-    'postgres_changes',
-    {
-      event: '*',
-      schema: 'public',
-      table: 'equipment'
-    },
-    (payload) => {
-      console.log("Realtime Change:", payload);
+    "postgres_changes",
+    { event: "*", schema: "public", table: "equipment" },
+    () => {
       loadDashboard();
+      loadEquipmentList();
     }
   )
   .subscribe();
 
 
-// 🔥 Initial Load
+// 🔥 INITIAL LOAD
 loadDashboard();
 loadStatusDropdown();
+loadEquipmentList();
