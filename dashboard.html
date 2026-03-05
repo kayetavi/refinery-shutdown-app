@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Refinery Shutdown Dashboard</title>
 <link rel="stylesheet" href="css/style.css">
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
 
@@ -12,11 +15,11 @@
 <header class="top-nav">
   <div class="logo">🛢 Refinery Shutdown Dashboard</div>
   <nav>
-    <a href="#">Home</a>
-    <a href="#">Units</a>
-    <a href="#">Equipment</a>
-    <a href="#">Reports</a>
-    <a href="#">Admin</a>
+    <a href="index.html">Home</a>
+    <a href="units.html">Units</a>
+    <a href="equipment.html">Equipment</a>
+    <a href="reports.html">Reports</a>
+    <a href="admin.html">Admin</a>
   </nav>
   <div class="user-area">
     <span id="userEmail"></span>
@@ -29,32 +32,32 @@
 
   <div class="metric orange">
     <h4>Total Units</h4>
-    <p>5</p>
+    <p id="totalUnits">0</p>
   </div>
 
   <div class="metric blue">
     <h4>Total Equipment</h4>
-    <p>250</p>
+    <p id="totalEquipment">0</p>
   </div>
 
   <div class="metric red">
     <h4>Shutdown Equipment</h4>
-    <p>80</p>
+    <p id="shutdownCount">0</p>
   </div>
 
   <div class="metric yellow">
     <h4>Pre-Cleaning Pending</h4>
-    <p>15</p>
+    <p id="preCleanCount">0</p>
   </div>
 
   <div class="metric green">
     <h4>Post-Cleaning Offered</h4>
-    <p>20</p>
+    <p id="postCleanCount">0</p>
   </div>
 
   <div class="metric purple">
     <h4>NDT Pending</h4>
-    <p>10</p>
+    <p id="ndtPending">0</p>
   </div>
 
 </section>
@@ -65,13 +68,7 @@
   <!-- LEFT ALERTS -->
   <aside class="alerts-panel">
     <h3>Alerts & Notifications</h3>
-
-    <div class="alert-item red">Pre-Cleaning Recommendation Pending</div>
-    <div class="alert-item orange">Operation Action Not Completed</div>
-    <div class="alert-item green">Post-Cleaning Offer Received</div>
-    <div class="alert-item blue">NDT Completed</div>
-    <div class="alert-item red">Maintenance Action Required</div>
-    <div class="alert-item green">Ready for Box-Up</div>
+    <div id="alertsContainer"></div>
   </aside>
 
   <!-- RIGHT CONTENT -->
@@ -83,7 +80,7 @@
     <div class="progress-section">
       <label>CDU Unit Progress</label>
       <div class="progress-bar">
-        <div class="progress-fill" style="width:75%;">75%</div>
+        <div class="progress-fill">0%</div>
       </div>
     </div>
 
@@ -97,31 +94,134 @@
           <th>Operation Status</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>V-101</td>
-          <td class="badge red">Pre-Cleaning</td>
-          <td>13 Days</td>
-          <td>Offered for Post-Cleaning</td>
-        </tr>
-        <tr>
-          <td>E-202</td>
-          <td class="badge green">Post-Cleaning Offered</td>
-          <td>8 Days</td>
-          <td>Ready for Box-Up</td>
-        </tr>
-        <tr>
-          <td>C-303</td>
-          <td class="badge blue">NDT Completed</td>
-          <td>17 Days</td>
-          <td>Maintenance Pending</td>
-        </tr>
+      <tbody id="cduTableBody">
+        <!-- Dynamic Data -->
       </tbody>
     </table>
 
   </div>
 
 </section>
+
+
+<!-- ================= SCRIPT ================= -->
+<script>
+
+// ===== SUPABASE CONFIG =====
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+// ===== WAITING DAYS =====
+function calculateWaitingDays(date) {
+  if (!date) return "0 Days";
+  const diff = new Date() - new Date(date);
+  return Math.floor(diff / (1000 * 60 * 60 * 24)) + " Days";
+}
+
+
+// ===== LOAD DASHBOARD =====
+async function loadDashboard() {
+
+  const { data } = await supabase
+    .from("equipment")
+    .select("unit, workflow_status");
+
+  if (!data) return;
+
+  const totalEquipment = data.length;
+  const totalUnits = [...new Set(data.map(e => e.unit))].length;
+  const shutdownCount = data.filter(e => e.workflow_status !== "Closed").length;
+  const preClean = data.filter(e => e.workflow_status === "Offered for Pre-Cleaning Inspection").length;
+  const postClean = data.filter(e => e.workflow_status === "Offered for Post-Cleaning Inspection").length;
+  const ndt = data.filter(e => e.workflow_status === "NDT Inspection").length;
+
+  document.getElementById("totalUnits").innerText = totalUnits;
+  document.getElementById("totalEquipment").innerText = totalEquipment;
+  document.getElementById("shutdownCount").innerText = shutdownCount;
+  document.getElementById("preCleanCount").innerText = preClean;
+  document.getElementById("postCleanCount").innerText = postClean;
+  document.getElementById("ndtPending").innerText = ndt;
+
+  const completed = data.filter(e =>
+    e.workflow_status === "Ready for Box-Up" ||
+    e.workflow_status === "Closed").length;
+
+  const percent = totalEquipment === 0 ? 0 :
+    Math.round((completed / totalEquipment) * 100);
+
+  const bar = document.querySelector(".progress-fill");
+  bar.style.width = percent + "%";
+  bar.innerText = percent + "%";
+}
+
+
+// ===== LOAD CDU TABLE =====
+async function loadCDUTable() {
+
+  const { data } = await supabase
+    .from("equipment")
+    .select("tag_number, workflow_status, shutdown_date")
+    .eq("unit", "CDU");
+
+  const table = document.getElementById("cduTableBody");
+  table.innerHTML = "";
+
+  data.forEach(eq => {
+
+    table.innerHTML += `
+      <tr>
+        <td>${eq.tag_number}</td>
+        <td>${eq.workflow_status}</td>
+        <td>${calculateWaitingDays(eq.shutdown_date)}</td>
+        <td>${eq.workflow_status}</td>
+      </tr>`;
+  });
+}
+
+
+// ===== LOAD ALERTS =====
+async function loadAlerts() {
+
+  const { data } = await supabase
+    .from("equipment")
+    .select("workflow_status");
+
+  const alertsBox = document.getElementById("alertsContainer");
+  alertsBox.innerHTML = "";
+
+  const alertStatuses = [
+    "Observation Raised",
+    "Recommendation Issued",
+    "NDT Inspection",
+    "Maintenance Started"
+  ];
+
+  alertStatuses.forEach(status => {
+
+    const count = data.filter(e =>
+      e.workflow_status === status).length;
+
+    if (count > 0) {
+      alertsBox.innerHTML += `
+        <div class="alert-item red">
+          ${status} (${count})
+        </div>`;
+    }
+  });
+}
+
+
+// ===== INITIAL LOAD =====
+document.addEventListener("DOMContentLoaded", () => {
+  loadDashboard();
+  loadCDUTable();
+  loadAlerts();
+});
+
+</script>
 
 </body>
 </html>
