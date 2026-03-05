@@ -1,0 +1,21 @@
+body {
+  font-family: Arial;
+  margin: 0;
+  padding: 20px;
+}
+
+.navbar {
+  background: #222;
+  padding: 10px;
+  color: white;
+}
+
+.sidebar {
+  margin: 10px 0;
+}
+
+.card {
+  padding: 20px;
+  background: #eee;
+  margin: 10px 0;
+}
