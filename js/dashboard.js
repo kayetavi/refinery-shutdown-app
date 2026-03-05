@@ -61,10 +61,8 @@ function loadStatusDropdown() {
 async function loadEquipmentList() {
 
   const { data, error } = await supabase
-    .from("equipment")
-    .select("tag_number, workflow_status, shutdown_date")
-    .order("tag_number", { ascending: true });
-
+  .from("equipment")
+  .select("unit_id, workflow_status");
   if (error) {
     console.error("Equipment Load Error:", error);
     return;
@@ -106,8 +104,7 @@ async function loadDashboard() {
   const totalEquipment = data.length;
 
   const totalUnits =
-    [...new Set(data.map(e => e.unit).filter(Boolean))].length;
-
+    [...new Set(data.map(e => e.unit_id).filter(Boolean))].length;
   const shutdownEquipment =
     data.filter(e => e.workflow_status !== "Closed").length;
 
