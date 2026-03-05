@@ -1,4 +1,4 @@
- // 🔥 FULL WORKFLOW FLOW
+// 🔥 FULL WORKFLOW FLOW
 const STATUS_FLOW = [
   "Shutdown Completed",
   "Handed Over to Maintenance",
@@ -26,19 +26,15 @@ async function loadDashboard() {
     return;
   }
 
-  // Maintenance Started Count
   document.getElementById("maintenanceCount").innerText =
     data.filter(e => e.workflow_status === "Maintenance Started").length;
 
-  // Pre-Cleaning Pending
   document.getElementById("preCleanCount").innerText =
     data.filter(e => e.workflow_status === "Offered for Pre-Cleaning Inspection").length;
 
-  // Post-Cleaning Pending
   document.getElementById("postCleanCount").innerText =
     data.filter(e => e.workflow_status === "Offered for Post-Cleaning Inspection").length;
 
-  // Ready for Box-Up
   document.getElementById("boxupCount").innerText =
     data.filter(e => e.workflow_status === "Ready for Box-Up").length;
 }
@@ -54,10 +50,11 @@ async function moveNextStep() {
     return;
   }
 
+  // 🔎 Find equipment using correct column name
   const { data, error } = await supabase
     .from("equipment")
     .select("*")
-    .eq("equipment_no", equipNo)
+    .eq("tag_number", equipNo)   // ✅ FIXED
     .single();
 
   if (error || !data) {
@@ -79,13 +76,15 @@ async function moveNextStep() {
 
   const nextStatus = STATUS_FLOW[currentIndex + 1];
 
-  const { updateError } = await supabase
+  // 🔄 Update using correct column name
+  const { error: updateError } = await supabase
     .from("equipment")
     .update({ workflow_status: nextStatus })
-    .eq("equipment_no", equipNo);
+    .eq("tag_number", equipNo);   // ✅ FIXED
 
   if (updateError) {
     alert("Update failed!");
+    console.error(updateError);
     return;
   }
 
@@ -99,4 +98,4 @@ async function moveNextStep() {
 setInterval(loadDashboard, 10000);
 
 // First Load
-loadDashboard(); 
+loadDashboard();
