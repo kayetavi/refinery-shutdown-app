@@ -7,14 +7,29 @@
 
 <link rel="stylesheet" href="css/style.css">
 
-<!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+
+.metric{
+cursor:pointer;
+transition:0.3s;
+}
+
+.metric:hover{
+transform:scale(1.05);
+}
+
+.status-table tr{
+cursor:pointer;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<!-- ================= TOP NAV ================= -->
 <header class="top-nav">
 
 <div class="logo">🛢 Refinery Shutdown Dashboard</div>
@@ -35,36 +50,36 @@
 </header>
 
 
-<!-- ================= METRIC CARDS ================= -->
+<!-- METRICS -->
 
 <section class="metrics">
 
-<div class="metric orange">
+<div class="metric orange" onclick="openUnits()">
 <h4>Total Units</h4>
 <p id="totalUnits">0</p>
 </div>
 
-<div class="metric blue">
+<div class="metric blue" onclick="openEquipment()">
 <h4>Total Equipment</h4>
 <p id="totalEquipment">0</p>
 </div>
 
-<div class="metric red">
+<div class="metric red" onclick="filterEquipment('shutdown')">
 <h4>Shutdown Equipment</h4>
 <p id="shutdownCount">0</p>
 </div>
 
-<div class="metric yellow">
+<div class="metric yellow" onclick="filterEquipment('preclean')">
 <h4>Pre-Cleaning Pending</h4>
 <p id="preCleanCount">0</p>
 </div>
 
-<div class="metric green">
+<div class="metric green" onclick="filterEquipment('postclean')">
 <h4>Post-Cleaning Offered</h4>
 <p id="postCleanCount">0</p>
 </div>
 
-<div class="metric purple">
+<div class="metric purple" onclick="filterEquipment('ndt')">
 <h4>NDT Pending</h4>
 <p id="ndtPending">0</p>
 </div>
@@ -72,11 +87,9 @@
 </section>
 
 
-<!-- ================= MAIN GRID ================= -->
 
 <section class="main-layout">
 
-<!-- LEFT ALERTS -->
 <aside class="alerts-panel">
 
 <h3>Alerts & Notifications</h3>
@@ -86,12 +99,11 @@
 </aside>
 
 
-<!-- RIGHT CONTENT -->
+
 <div class="content-panel">
 
 <h3>CDU Unit Details Overview</h3>
 
-<!-- Progress Bar -->
 <div class="progress-section">
 
 <label>CDU Unit Progress</label>
@@ -103,7 +115,6 @@
 </div>
 
 
-<!-- Equipment Table -->
 
 <table class="status-table">
 
@@ -131,24 +142,20 @@
 </section>
 
 
+
 <script>
 
 
-
-// ================= SUPABASE CONFIG =================
-
 const SUPABASE_URL = "https://lhktmcqjywduohrwsmzb.supabase.co";
 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
-
+/* IMPORTANT */
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI";
 
 const { createClient } = supabase;
 
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
-
-// ================= WAITING DAYS =================
 
 function calculateWaitingDays(date){
 
@@ -162,7 +169,7 @@ return Math.floor(diff/(1000*60*60*24))+" Days";
 
 
 
-// ================= LOAD DASHBOARD =================
+/* ================= DASHBOARD ================= */
 
 async function loadDashboard(){
 
@@ -173,33 +180,23 @@ const {data,error} = await supabaseClient
 if(error){
 
 console.log(error);
-
 return;
 
 }
 
-if(!data) return;
-
-
-
 const totalEquipment = data.length;
-
 
 const totalUnits =
 [...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
 
-
 const shutdownCount =
 data.filter(e=>e.workflow_status!=="Closed").length;
-
 
 const preClean =
 data.filter(e=>e.workflow_status==="Offered for Pre-Cleaning Inspection").length;
 
-
 const postClean =
 data.filter(e=>e.workflow_status==="Offered for Post-Cleaning Inspection").length;
-
 
 const ndt =
 data.filter(e=>e.workflow_status==="NDT Inspection").length;
@@ -207,20 +204,13 @@ data.filter(e=>e.workflow_status==="NDT Inspection").length;
 
 
 document.getElementById("totalUnits").innerText=totalUnits;
-
 document.getElementById("totalEquipment").innerText=totalEquipment;
-
 document.getElementById("shutdownCount").innerText=shutdownCount;
-
 document.getElementById("preCleanCount").innerText=preClean;
-
 document.getElementById("postCleanCount").innerText=postClean;
-
 document.getElementById("ndtPending").innerText=ndt;
 
 
-
-// ===== PROGRESS =====
 
 const completed =
 data.filter(e=>
@@ -236,53 +226,36 @@ Math.round((completed/totalEquipment)*100);
 const bar = document.querySelector(".progress-fill");
 
 bar.style.width = percent+"%";
-
 bar.innerText = percent+"%";
 
 }
 
 
 
-// ================= LOAD CDU TABLE =================
+/* ================= CDU TABLE ================= */
 
 async function loadCDUTable(){
 
 const {data,error} = await supabaseClient
 .from("equipment")
-.select("tag_number,workflow_status,shutdown_date,unit_id")
-.eq("unit_id","CDU");
-
+.select("tag_number,workflow_status,shutdown_date");
 
 const table = document.getElementById("cduTableBody");
 
 table.innerHTML="";
 
-
 if(error){
 
 console.log(error);
-
 return;
 
 }
-
-
-if(!data || data.length===0){
-
-table.innerHTML=`<tr>
-<td colspan="4">No Equipment Found</td>
-</tr>`;
-
-return;
-
-}
-
 
 data.forEach(eq=>{
 
 table.innerHTML +=`
 
-<tr>
+<tr onclick="openEquipmentDetails('${eq.tag_number}')">
 
 <td>${eq.tag_number}</td>
 
@@ -302,33 +275,26 @@ table.innerHTML +=`
 
 
 
-// ================= LOAD ALERTS =================
+/* ================= ALERTS ================= */
 
 async function loadAlerts(){
 
-const {data,error} = await supabaseClient
+const {data} = await supabaseClient
 .from("equipment")
 .select("workflow_status");
-
-if(error) return;
 
 const alertsBox = document.getElementById("alertsContainer");
 
 alertsBox.innerHTML="";
 
-
 const alertStatuses = [
 
 "Observation Raised",
-
 "Recommendation Issued",
-
 "NDT Inspection",
-
 "Maintenance Started"
 
 ];
-
 
 alertStatuses.forEach(status=>{
 
@@ -354,37 +320,59 @@ ${status} (${count})
 
 
 
-// ================= REAL TIME UPDATE =================
+/* ================= PAGE NAVIGATION ================= */
+
+function openUnits(){
+
+window.location="units.html";
+
+}
+
+function openEquipment(){
+
+window.location="equipment.html";
+
+}
+
+function filterEquipment(status){
+
+window.location=`equipment.html?status=${status}`;
+
+}
+
+function openEquipmentDetails(tag){
+
+window.location=`equipment-details.html?tag=${tag}`;
+
+}
+
+
+
+/* ================= REALTIME ================= */
 
 supabaseClient
 .channel("equipment-live")
-
 .on(
 "postgres_changes",
 {event:"*",schema:"public",table:"equipment"},
 ()=>{
 
 loadDashboard();
-
 loadCDUTable();
-
 loadAlerts();
 
 }
 )
-
 .subscribe();
 
 
 
-// ================= INITIAL LOAD =================
+/* ================= INIT ================= */
 
 document.addEventListener("DOMContentLoaded",()=>{
 
 loadDashboard();
-
 loadCDUTable();
-
 loadAlerts();
 
 });
