@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Refinery Shutdown System</title>
+  <title>Shutdown Management</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
+
+  <h1>Refinery Shutdown Dashboard</h1>
+
+  <div class="card">
+    <h2>Add Unit</h2>
+    <input type="text" id="unitName" placeholder="Unit Name">
+    <button onclick="addUnit()">Add Unit</button>
+  </div>
+
+  <div class="card">
+    <h2>Add Equipment</h2>
+    <input type="text" id="equipTag" placeholder="Tag Number">
+    <input type="text" id="equipName" placeholder="Equipment Name">
+    <select id="unitSelect"></select>
+    <button onclick="addEquipment()">Add Equipment</button>
+  </div>
+
+  <div class="card">
+    <h2>Equipment List</h2>
+    <ul id="equipmentList"></ul>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+
 </body>
 </html>
