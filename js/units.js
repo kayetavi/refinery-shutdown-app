@@ -6,8 +6,8 @@ const supabaseKey =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2";
 
 const supabaseClient = supabase.createClient(
-supabaseUrl,
-supabaseKey
+  supabaseUrl,
+  supabaseKey
 );
 
 
@@ -15,103 +15,83 @@ supabaseKey
 
 async function loadUnits(){
 
-try{
+  const container = document.getElementById("unitsContainer");
 
-const {data,error} = await supabaseClient
-.from("equipment")
-.select("*");
+  if(!container){
+    console.error("unitsContainer div not found");
+    return;
+  }
 
-if(error){
-console.error("Supabase Error:",error);
-return;
-}
+  container.innerHTML = "Loading Units...";
 
-if(!data || data.length===0){
-console.log("No Equipment Found");
-return;
-}
+  try{
 
+    const { data, error } = await supabaseClient
+      .from("equipment")
+      .select("*");
 
-// ❗ NULL UNIT REMOVE
-const units = [
-...new Set(
-data
-.map(e=>e.unit)
-.filter(u=>u && u.trim()!=="")
-)
-];
+    if(error){
+      console.error("Supabase Error:", error);
+      container.innerHTML = "Error loading units";
+      return;
+    }
 
-const container =
-document.getElementById("unitsContainer");
+    if(!data || data.length === 0){
+      container.innerHTML = "No equipment found";
+      return;
+    }
 
-if(!container){
-console.error("unitsContainer not found in HTML");
-return;
-}
+    // ===== UNIQUE UNITS =====
+    const units = [...new Set(
+      data
+      .map(e => e.unit)
+      .filter(u => u !== null && u !== "")
+    )];
 
-container.innerHTML="";
+    container.innerHTML = "";
 
+    // ===== CREATE CARDS =====
+    units.forEach(unit => {
 
-// ================= CREATE CARDS =================
+      const total = data.filter(e => e.unit === unit).length;
 
-units.forEach(unit=>{
+      const ndt = data.filter(e =>
+        e.unit === unit &&
+        e.workflow_status === "NDT Inspection"
+      ).length;
 
-const total =
-data.filter(e=>e.unit===unit).length;
+      const card = document.createElement("div");
 
-const ndt =
-data.filter(e=>
-e.unit===unit &&
-e.workflow_status==="NDT Inspection"
-).length;
+      card.className = "unit-card";
 
-const card = document.createElement("div");
+      card.style.cursor = "pointer";
 
-card.className="unit-card";
+      card.innerHTML = `
+        <h3>Unit : ${unit}</h3>
+        <p>Total Equipment : ${total}</p>
+        <p>NDT Pending : ${ndt}</p>
+      `;
 
-card.style.cursor="pointer";
+      card.addEventListener("click", () => {
+        window.location.href =
+        "equipment.html?unit=" + encodeURIComponent(unit);
+      });
 
-card.onclick=function(){
-openUnit(unit);
-};
+      container.appendChild(card);
 
-card.innerHTML=`
+    });
 
-<b>Unit :</b> ${unit} <br><br>
-
-Total Equipment : ${total} <br>
-
-NDT Pending : ${ndt}
-
-`;
-
-container.appendChild(card);
-
-});
-
-}catch(err){
-
-console.error("Unit Load Error:",err);
-
-}
-
-}
-
-
-// ================= OPEN UNIT =================
-
-function openUnit(unit){
-
-window.location.href =
-"equipment.html?unit=" + encodeURIComponent(unit);
+  }
+  catch(err){
+    console.error("Unit Load Error:", err);
+    container.innerHTML = "Error loading units";
+  }
 
 }
 
 
 // ================= PAGE LOAD =================
 
-document.addEventListener("DOMContentLoaded",()=>{
-
-loadUnits();
-
+document.addEventListener("DOMContentLoaded", function(){
+  loadUnits();
 });
