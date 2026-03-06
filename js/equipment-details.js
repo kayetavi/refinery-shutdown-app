@@ -56,6 +56,7 @@ return;
 equipmentId = data.id;
 
 document.getElementById("tagNumber").innerText = data.tag_number || "-";
+  document.getElementById("unit").innerText = data.unit || "-";
 document.getElementById("status").innerText = data.workflow_status || "-";
 document.getElementById("shutdownDate").innerText = data.shutdown_date || "-";
 
@@ -75,11 +76,15 @@ const steps = document.querySelectorAll(".timeline-step");
 const workflow = [
 
 "Shutdown Completed",
+"Handed Over to Maintenance",
 "Maintenance Started",
-"Pre Cleaning Inspection",
+"Offered for Pre-Cleaning Inspection",
 "Observation Raised",
 "Recommendation Issued",
-"Repair Completed",
+"Recommendation Attended",
+"Offered for Post-Cleaning Inspection",
+"NDT Inspection",
+"Ready for Box-Up",
 "Closed"
 
 ];
