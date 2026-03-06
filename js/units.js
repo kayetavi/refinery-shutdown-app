@@ -15,21 +15,44 @@ supabaseKey
 
 async function loadUnits(){
 
+try{
+
 const {data,error} = await supabaseClient
 .from("equipment")
 .select("*");
 
 if(error){
-console.error(error);
+console.error("Supabase Error:",error);
 return;
 }
 
-const units = [...new Set(data.map(e=>e.unit))];
+if(!data || data.length===0){
+console.log("No Equipment Found");
+return;
+}
+
+
+// ❗ NULL UNIT REMOVE
+const units = [
+...new Set(
+data
+.map(e=>e.unit)
+.filter(u=>u && u.trim()!=="")
+)
+];
 
 const container =
 document.getElementById("unitsContainer");
 
+if(!container){
+console.error("unitsContainer not found in HTML");
+return;
+}
+
 container.innerHTML="";
+
+
+// ================= CREATE CARDS =================
 
 units.forEach(unit=>{
 
@@ -45,6 +68,8 @@ e.workflow_status==="NDT Inspection"
 const card = document.createElement("div");
 
 card.className="unit-card";
+
+card.style.cursor="pointer";
 
 card.onclick=function(){
 openUnit(unit);
@@ -64,6 +89,12 @@ container.appendChild(card);
 
 });
 
+}catch(err){
+
+console.error("Unit Load Error:",err);
+
+}
+
 }
 
 
@@ -79,4 +110,8 @@ window.location.href =
 
 // ================= PAGE LOAD =================
 
+document.addEventListener("DOMContentLoaded",()=>{
+
 loadUnits();
+
+});
