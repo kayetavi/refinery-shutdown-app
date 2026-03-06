@@ -3,23 +3,32 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// URL se equipment id lena
+// URL se tag lena
 const urlParams = new URLSearchParams(window.location.search);
-const equipmentId = urlParams.get("id");
+const equipmentTag = urlParams.get("tag");
 
+if(!equipmentTag){
+alert("Equipment tag not found in URL");
+}
+
+// PAGE LOAD
 loadEquipment();
 
-// EQUIPMENT LOAD
-async function loadEquipment() {
+
+// ================================
+// LOAD EQUIPMENT
+// ================================
+
+async function loadEquipment(){
 
 let { data, error } = await supabase
 .from("equipment")
 .select("*")
-.eq("id", equipmentId)
+.eq("tag", equipmentTag)
 .single();
 
 if(error){
-console.log(error);
+console.error("Equipment Load Error:", error);
 return;
 }
 
@@ -35,7 +44,12 @@ loadRecommendation();
 
 }
 
-// STATUS UPDATE
+
+
+// ================================
+// UPDATE STATUS
+// ================================
+
 async function updateStatus(){
 
 let status = document.getElementById("statusSelect").value;
@@ -43,9 +57,10 @@ let status = document.getElementById("statusSelect").value;
 let { error } = await supabase
 .from("equipment")
 .update({ status: status })
-.eq("id", equipmentId);
+.eq("tag", equipmentTag);
 
 if(error){
+console.error("Status Update Error:", error);
 alert("Update Failed");
 return;
 }
@@ -56,27 +71,39 @@ loadEquipment();
 
 }
 
+
+
+// ================================
 // TIMELINE HIGHLIGHT
+// ================================
+
 function highlightTimeline(currentStatus){
 
 let steps = document.querySelectorAll(".timeline-step");
 
 steps.forEach(step=>{
+
 step.classList.remove("active");
 
-if(step.innerText == currentStatus){
+if(step.innerText.trim() === currentStatus){
 step.classList.add("active");
 }
+
 });
 
 }
 
+
+
+// ================================
 // SAVE OBSERVATION
+// ================================
+
 async function saveObservation(){
 
-let text = document.getElementById("observationText").value;
+let text = document.getElementById("observationText").value.trim();
 
-if(text == ""){
+if(text === ""){
 alert("Write Observation");
 return;
 }
@@ -85,45 +112,58 @@ let { error } = await supabase
 .from("observation")
 .insert([
 {
-equipment_id: equipmentId,
+equipment_tag: equipmentTag,
 observation: text
 }
 ]);
 
 if(error){
+console.error("Observation Save Error:", error);
 alert("Save Failed");
 return;
 }
 
-document.getElementById("observationText").value="";
+document.getElementById("observationText").value = "";
 
 loadObservation();
 
 }
 
+
+
+// ================================
 // LOAD OBSERVATION
+// ================================
+
 async function loadObservation(){
 
-let { data } = await supabase
+let { data, error } = await supabase
 .from("observation")
 .select("*")
-.eq("equipment_id", equipmentId)
+.eq("equipment_tag", equipmentTag)
 .order("created_at",{ascending:false});
+
+if(error){
+console.error("Observation Load Error:", error);
+return;
+}
 
 let table = document.getElementById("observationHistory");
 
 table.innerHTML="";
 
-if(data.length==0){
+if(!data || data.length === 0){
+
 table.innerHTML="<tr><td colspan='2'>No Observation</td></tr>";
 return;
+
 }
 
 data.forEach(row=>{
 
 let tr=document.createElement("tr");
 
-tr.innerHTML=
+tr.innerHTML =
 `<td>${row.created_at.substring(0,10)}</td>
 <td>${row.observation}</td>`;
 
@@ -133,12 +173,17 @@ table.appendChild(tr);
 
 }
 
+
+
+// ================================
 // SAVE RECOMMENDATION
+// ================================
+
 async function saveRecommendation(){
 
-let text = document.getElementById("recommendationText").value;
+let text = document.getElementById("recommendationText").value.trim();
 
-if(text==""){
+if(text === ""){
 alert("Write Recommendation");
 return;
 }
@@ -147,45 +192,58 @@ let { error } = await supabase
 .from("recommendation")
 .insert([
 {
-equipment_id: equipmentId,
+equipment_tag: equipmentTag,
 recommendation: text
 }
 ]);
 
 if(error){
+console.error("Recommendation Save Error:", error);
 alert("Save Failed");
 return;
 }
 
-document.getElementById("recommendationText").value="";
+document.getElementById("recommendationText").value = "";
 
 loadRecommendation();
 
 }
 
+
+
+// ================================
 // LOAD RECOMMENDATION
+// ================================
+
 async function loadRecommendation(){
 
-let { data } = await supabase
+let { data, error } = await supabase
 .from("recommendation")
 .select("*")
-.eq("equipment_id", equipmentId)
+.eq("equipment_tag", equipmentTag)
 .order("created_at",{ascending:false});
+
+if(error){
+console.error("Recommendation Load Error:", error);
+return;
+}
 
 let table = document.getElementById("recommendationHistory");
 
 table.innerHTML="";
 
-if(data.length==0){
+if(!data || data.length === 0){
+
 table.innerHTML="<tr><td colspan='2'>No Recommendation</td></tr>";
 return;
+
 }
 
 data.forEach(row=>{
 
 let tr=document.createElement("tr");
 
-tr.innerHTML=
+tr.innerHTML =
 `<td>${row.created_at.substring(0,10)}</td>
 <td>${row.recommendation}</td>`;
 
@@ -193,4 +251,4 @@ table.appendChild(tr);
 
 });
 
-}
+       }
