@@ -300,3 +300,28 @@ document.addEventListener("DOMContentLoaded",()=>{
   loadAlerts();
 
 });
+
+// ============================
+// CARD NAVIGATION
+// ============================
+
+function goToUnits(){
+
+window.location="units.html";
+
+}
+
+
+function goToEquipment(){
+
+window.location="equipment.html";
+
+}
+
+
+function filterStatus(status){
+
+window.location=
+"equipment.html?status="+encodeURIComponent(status);
+
+}
