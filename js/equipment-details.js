@@ -1,185 +1,167 @@
-// ===============================
-// SUPABASE CONNECTION
-// ===============================
 
-const SUPABASE_URL = "https://lhktmcqjywduohrwsmzb.supabase.co"
+/* ================= SUPABASE CONNECTION ================= */
 
-const SUPABASE_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ"
+const supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
 
-const supabaseClient =
-supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 
-// ===============================
-// GET TAG FROM URL
-// ===============================
+/* ================= GET TAG FROM URL ================= */
 
-const urlParams = new URLSearchParams(window.location.search)
+const urlParams = new URLSearchParams(window.location.search);
+const tag = urlParams.get("tag");
 
-const tag = urlParams.get("tag")
+let equipmentId = null;
 
 
-// ===============================
-// LOAD EQUIPMENT DETAILS
-// ===============================
+/* ================= LOAD EQUIPMENT ================= */
 
 async function loadEquipment(){
 
-if(!tag){
-
-alert("No equipment selected")
-
-return
-
-}
-
-const {data,error} = await supabaseClient
+const { data, error } = await supabase
 .from("equipment")
 .select("*")
-.eq("tag_number",tag)
-.single()
+.eq("tag_number", tag)
+.single();
 
 if(error){
 
-console.log(error)
-
-return
+console.log(error);
+return;
 
 }
 
-document.getElementById("tagNumber").innerText = data.tag_number
+equipmentId = data.id;
 
-document.getElementById("status").innerText =
-data.workflow_status
+document.getElementById("tagNumber").innerText = data.tag_number;
+document.getElementById("status").innerText = data.workflow_status;
+document.getElementById("shutdownDate").innerText = data.shutdown_date;
 
-document.getElementById("shutdownDate").innerText =
-data.shutdown_date || "-"
-
-document.getElementById("unit").innerText =
-data.unit_id || "-"
+updateTimeline(data.workflow_status);
 
 }
 
 
-// ===============================
-// UPDATE STATUS
-// ===============================
+/* ================= TIMELINE UPDATE ================= */
+
+function updateTimeline(status){
+
+const steps = document.querySelectorAll(".timeline-step");
+
+const workflow = [
+
+"Shutdown Completed",
+"Maintenance Started",
+"Pre Cleaning Inspection",
+"Observation Raised",
+"Recommendation Issued",
+"Repair Completed",
+"Closed"
+
+];
+
+const currentIndex = workflow.indexOf(status);
+
+steps.forEach((step,index)=>{
+
+step.classList.remove("active");
+
+if(index <= currentIndex){
+
+step.classList.add("active");
+
+}
+
+});
+
+}
+
+
+/* ================= UPDATE STATUS ================= */
 
 async function updateStatus(){
 
-const newStatus =
-document.getElementById("statusSelect").value
+const newStatus = document.getElementById("statusSelect").value;
 
-const {error} = await supabaseClient
+const { error } = await supabase
 .from("equipment")
-.update({
-workflow_status:newStatus
-})
-.eq("tag_number",tag)
+.update({ workflow_status: newStatus })
+.eq("id", equipmentId);
 
 if(error){
 
-alert("Update Failed")
+alert("Update failed");
 
-return
+}else{
+
+alert("Status Updated");
+
+document.getElementById("status").innerText = newStatus;
+
+updateTimeline(newStatus);
 
 }
 
-alert("Status Updated")
-
-loadEquipment()
-
 }
 
 
-// ===============================
-// SAVE OBSERVATION
-// ===============================
+/* ================= SAVE OBSERVATION ================= */
 
 async function saveObservation(){
 
-const text =
-document.getElementById("observationText").value
+const text = document.getElementById("observationText").value;
 
 if(!text){
 
-alert("Enter observation")
-
-return
-
-}
-
-const {error} = await supabaseClient
-.from("observations")
-.insert([
-{
-tag_number:tag,
-observation:text
-}
-])
-
-if(error){
-
-alert("Save Failed")
-
-return
+alert("Enter observation");
+return;
 
 }
 
-alert("Observation Saved")
+await supabase
+.from("recommendations")
+.insert({
+equipment_id: equipmentId,
+type:"observation",
+text:text
+});
 
-document.getElementById("observationText").value=""
+alert("Observation Saved");
+
+document.getElementById("observationText").value="";
 
 }
 
 
-// ===============================
-// SAVE RECOMMENDATION
-// ===============================
+/* ================= SAVE RECOMMENDATION ================= */
 
 async function saveRecommendation(){
 
-const text =
-document.getElementById("recommendationText").value
+const text = document.getElementById("recommendationText").value;
 
 if(!text){
 
-alert("Enter recommendation")
-
-return
+alert("Enter recommendation");
+return;
 
 }
 
-const {error} = await supabaseClient
+await supabase
 .from("recommendations")
-.insert([
-{
-tag_number:tag,
-recommendation:text
-}
-])
+.insert({
+equipment_id: equipmentId,
+type:"recommendation",
+text:text
+});
 
-if(error){
+alert("Recommendation Saved");
 
-alert("Save Failed")
-
-return
-
-}
-
-alert("Recommendation Saved")
-
-document.getElementById("recommendationText").value=""
+document.getElementById("recommendationText").value="";
 
 }
 
 
-// ===============================
-// PAGE LOAD
-// ===============================
+/* ================= PAGE LOAD ================= */
 
-document.addEventListener(
-"DOMContentLoaded",
-loadEquipment
-)
+loadEquipment();
