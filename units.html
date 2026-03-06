@@ -3,53 +3,83 @@
 
 <head>
 
-<title>Units</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Units Overview</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f6f9;
+}
+
+.top-nav{
+background:#1f3c88;
+color:white;
+display:flex;
+justify-content:space-between;
+padding:12px 20px;
+}
+
+.top-nav a{
+color:white;
+text-decoration:none;
+margin:0 10px;
+}
+
+.content{
+padding:20px;
+}
+
+.unit-card{
+background:white;
+padding:15px;
+margin-bottom:10px;
+border-radius:6px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+cursor:pointer;
+}
+
+.unit-card:hover{
+background:#f1f5ff;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h2>Units List</h2>
+<header class="top-nav">
 
-<ul id="unitList"></ul>
+<div>🛢 Units Overview</div>
 
-<script>
+<nav>
+<a href="dashboard.html">Dashboard</a>
+<a href="equipment.html">Equipment</a>
+</nav>
 
-const SUPABASE_URL="https://lhktmcqjywduohrwsmzb.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ"
+</header>
 
-const supabaseClient=
-supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+<div class="content">
 
-async function loadUnits(){
+<h2>Units</h2>
 
-const {data,error}=await supabaseClient
-.from("units")
-.select("*")
+<div id="unitsContainer">
 
-if(error){
+Loading units...
 
-console.log(error)
+</div>
 
-return
+</div>
 
-}
-
-const list=document.getElementById("unitList")
-
-data.forEach(u=>{
-
-list.innerHTML+=`<li>${u.name}</li>`
-
-})
-
-}
-
-loadUnits()
-
-</script>
+<script src="js/units.js"></script>
 
 </body>
+
 </html>
