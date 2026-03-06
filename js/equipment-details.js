@@ -1,4 +1,4 @@
-const supabaseUrl = "https://YOUR_PROJECT.supabase.co";
+const supabaseUrl = "https://lhktmcqjywduohrwsmzb.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI";
 
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
