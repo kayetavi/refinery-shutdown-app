@@ -14,9 +14,28 @@ const tag = urlParams.get("tag");
 let equipmentId = null;
 
 
+/* ================= PAGE INIT ================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+if(!tag){
+
+alert("No Equipment Tag Found in URL");
+
+return;
+
+}
+
+loadEquipment();
+
+});
+
+
 /* ================= LOAD EQUIPMENT ================= */
 
 async function loadEquipment(){
+
+console.log("Loading equipment for tag:", tag);
 
 const { data, error } = await supabase
 .from("equipment")
@@ -25,15 +44,20 @@ const { data, error } = await supabase
 .single();
 
 if(error){
-console.log(error);
+
+console.error("Equipment Load Error:", error);
+
+alert("Equipment not found");
+
 return;
+
 }
 
 equipmentId = data.id;
 
-document.getElementById("tagNumber").innerText = data.tag_number;
-document.getElementById("status").innerText = data.workflow_status;
-document.getElementById("shutdownDate").innerText = data.shutdown_date;
+document.getElementById("tagNumber").innerText = data.tag_number || "-";
+document.getElementById("status").innerText = data.workflow_status || "-";
+document.getElementById("shutdownDate").innerText = data.shutdown_date || "-";
 
 updateTimeline(data.workflow_status);
 
@@ -79,20 +103,40 @@ step.classList.add("active");
 
 async function updateStatus(){
 
+if(!equipmentId){
+
+alert("Equipment not loaded");
+
+return;
+
+}
+
 const newStatus = document.getElementById("statusSelect").value;
+
+if(!newStatus){
+
+alert("Select Status");
+
+return;
+
+}
 
 const { error } = await supabase
 .from("equipment")
-.update({ workflow_status: newStatus })
+.update({
+workflow_status: newStatus
+})
 .eq("id", equipmentId);
 
 if(error){
+
+console.error("Status Update Error:", error);
 
 alert("Update failed");
 
 }else{
 
-alert("Status Updated");
+alert("Status Updated Successfully");
 
 document.getElementById("status").innerText = newStatus;
 
@@ -107,6 +151,10 @@ updateTimeline(newStatus);
 
 async function loadHistory(){
 
+if(!equipmentId){
+return;
+}
+
 const { data, error } = await supabase
 .from("recommendations")
 .select("*")
@@ -114,8 +162,11 @@ const { data, error } = await supabase
 .order("created_at",{ascending:false});
 
 if(error){
-console.log(error);
+
+console.error("History Load Error:", error);
+
 return;
+
 }
 
 const obsTable = document.getElementById("observationHistory");
@@ -150,11 +201,22 @@ recTable.innerHTML += row;
 
 async function saveObservation(){
 
-const text = document.getElementById("observationText").value;
+if(!equipmentId){
 
-if(!text){
-alert("Enter observation");
+alert("Equipment not loaded");
+
 return;
+
+}
+
+const text = document.getElementById("observationText").value.trim();
+
+if(text === ""){
+
+alert("Enter observation");
+
+return;
+
 }
 
 const { error } = await supabase
@@ -166,8 +228,13 @@ text:text
 });
 
 if(error){
+
+console.error("Observation Save Error:", error);
+
 alert("Error saving observation");
+
 return;
+
 }
 
 alert("Observation Saved");
@@ -183,11 +250,22 @@ loadHistory();
 
 async function saveRecommendation(){
 
-const text = document.getElementById("recommendationText").value;
+if(!equipmentId){
 
-if(!text){
-alert("Enter recommendation");
+alert("Equipment not loaded");
+
 return;
+
+}
+
+const text = document.getElementById("recommendationText").value.trim();
+
+if(text === ""){
+
+alert("Enter recommendation");
+
+return;
+
 }
 
 const { error } = await supabase
@@ -199,8 +277,13 @@ text:text
 });
 
 if(error){
+
+console.error("Recommendation Save Error:", error);
+
 alert("Error saving recommendation");
+
 return;
+
 }
 
 alert("Recommendation Saved");
@@ -210,8 +293,3 @@ document.getElementById("recommendationText").value="";
 loadHistory();
 
 }
-
-
-/* ================= PAGE LOAD ================= */
-
-loadEquipment();
