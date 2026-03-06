@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
@@ -8,9 +9,128 @@
 
 <title>Equipment Details</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <link rel="stylesheet" href="css/style.css">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f6f9;
+}
+
+/* NAV */
+
+.top-nav{
+background:#1f3c88;
+color:white;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 20px;
+}
+
+.top-nav nav a{
+color:white;
+margin:0 10px;
+text-decoration:none;
+}
+
+/* MAIN PANEL */
+
+.content-panel{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+/* EQUIPMENT INFO */
+
+.details-box{
+background:white;
+padding:20px;
+border-radius:8px;
+margin-bottom:20px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+/* WORKFLOW TIMELINE */
+
+.timeline{
+background:white;
+padding:20px;
+border-radius:8px;
+margin-bottom:20px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.timeline-step{
+padding:10px;
+border-left:5px solid #ddd;
+margin-left:10px;
+margin-bottom:8px;
+}
+
+.timeline-step.active{
+border-color:#2ecc71;
+font-weight:bold;
+background:#f1fff5;
+}
+
+/* FORM */
+
+select{
+padding:8px;
+margin-top:10px;
+}
+
+textarea{
+width:100%;
+height:80px;
+margin-top:10px;
+padding:10px;
+border:1px solid #ccc;
+border-radius:4px;
+}
+
+button{
+margin-top:10px;
+padding:8px 16px;
+background:#1f77b4;
+color:white;
+border:none;
+border-radius:4px;
+cursor:pointer;
+}
+
+button:hover{
+background:#155fa0;
+}
+
+/* HISTORY TABLE */
+
+.history-table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+.history-table th{
+background:#f2f2f2;
+padding:8px;
+}
+
+.history-table td{
+padding:8px;
+border-bottom:1px solid #ddd;
+}
+
+</style>
 
 </head>
 
@@ -18,7 +138,7 @@
 
 <header class="top-nav">
 
-<div class="logo">🛢 Refinery Shutdown</div>
+<div>🛢 Refinery Shutdown System</div>
 
 <nav>
 <a href="dashboard.html">Dashboard</a>
@@ -27,23 +147,47 @@
 
 </header>
 
-
 <section class="content-panel">
 
 <h2>Equipment Details</h2>
 
+<!-- EQUIPMENT INFORMATION -->
+
 <div class="details-box">
 
-<p><b>Tag Number:</b> <span id="tagNumber"></span></p>
+<div><b>Tag Number:</b> <span id="tagNumber"></span></div>
 
-<p><b>Status:</b> <span id="status"></span></p>
+<div><b>Unit:</b> <span id="unit"></span></div>
 
-<p><b>Shutdown Date:</b> <span id="shutdownDate"></span></p>
+<div><b>Status:</b> <span id="status"></span></div>
 
-<p><b>Unit:</b> <span id="unit"></span></p>
+<div><b>Shutdown Date:</b> <span id="shutdownDate"></span></div>
 
 </div>
 
+<!-- WORKFLOW TIMELINE -->
+
+<h3>Shutdown Workflow Timeline</h3>
+
+<div class="timeline" id="workflowTimeline">
+
+<div class="timeline-step">Shutdown Completed</div>
+
+<div class="timeline-step">Maintenance Started</div>
+
+<div class="timeline-step">Pre Cleaning Inspection</div>
+
+<div class="timeline-step">Observation Raised</div>
+
+<div class="timeline-step">Recommendation Issued</div>
+
+<div class="timeline-step">Repair Completed</div>
+
+<div class="timeline-step">Closed</div>
+
+</div>
+
+<!-- WORKFLOW UPDATE -->
 
 <h3>Update Workflow</h3>
 
@@ -63,29 +207,76 @@
 
 </select>
 
+<br>
+
 <button onclick="updateStatus()">Update Status</button>
 
-
+<!-- OBSERVATION -->
 
 <h3>Observation</h3>
 
-<textarea id="observationText" placeholder="Enter Observation"></textarea>
+<textarea id="observationText" placeholder="Enter Inspection Observation"></textarea>
+
+<br>
 
 <button onclick="saveObservation()">Save Observation</button>
 
+<table class="history-table">
 
+<thead>
+
+<tr>
+<th>Date</th>
+<th>Observation</th>
+</tr>
+
+</thead>
+
+<tbody id="observationHistory">
+
+<tr>
+<td colspan="2">No Observation</td>
+</tr>
+
+</tbody>
+
+</table>
+
+<!-- RECOMMENDATION -->
 
 <h3>Recommendation</h3>
 
-<textarea id="recommendationText" placeholder="Enter Recommendation"></textarea>
+<textarea id="recommendationText" placeholder="Enter Repair Recommendation"></textarea>
+
+<br>
 
 <button onclick="saveRecommendation()">Save Recommendation</button>
 
+<table class="history-table">
+
+<thead>
+
+<tr>
+<th>Date</th>
+<th>Recommendation</th>
+</tr>
+
+</thead>
+
+<tbody id="recommendationHistory">
+
+<tr>
+<td colspan="2">No Recommendation</td>
+</tr>
+
+</tbody>
+
+</table>
 
 </section>
-
 
 <script src="js/equipment-details.js"></script>
 
 </body>
+
 </html>
