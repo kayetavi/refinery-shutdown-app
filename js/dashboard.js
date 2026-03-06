@@ -35,7 +35,7 @@ const STATUS_FLOW = [
 
 
 // =======================================
-// WAITING DAYS
+// WAITING DAYS CALCULATOR
 // =======================================
 
 function calculateWaitingDays(date){
@@ -70,9 +70,9 @@ return;
 
 }
 
-if(!data){
+if(!data || data.length === 0){
 
-console.log("No data found");
+console.log("No equipment data found");
 return;
 
 }
@@ -80,9 +80,10 @@ return;
 const totalEquipment = data.length;
 
 
-// ✅ UNIT FIX
+// ✅ UNIT COUNT FIX
+
 const totalUnits =
-[...new Set(data.map(e=>e.unit || e.unit_id).filter(Boolean))].length;
+[...new Set(data.map(e => e.unit || e.unit_id).filter(Boolean))].length;
 
 
 // =======================================
@@ -103,7 +104,7 @@ data.filter(e => e.workflow_status === "NDT Inspection").length;
 
 
 // =======================================
-// UPDATE KPI
+// UPDATE KPI CARDS
 // =======================================
 
 setText("totalUnits", totalUnits);
@@ -115,7 +116,7 @@ setText("ndtPending", ndt);
 
 
 // =======================================
-// PROGRESS
+// UPDATE PROGRESS
 // =======================================
 
 calculateProgress(data);
@@ -130,14 +131,14 @@ console.error("Dashboard Load Error:",err);
 
 
 // =======================================
-// PROGRESS BAR
+// SHUTDOWN PROGRESS BAR
 // =======================================
 
 function calculateProgress(data){
 
 const total = data.length;
 
-if(total===0) return;
+if(total === 0) return;
 
 const completed =
 data.filter(e =>
@@ -146,7 +147,7 @@ e.workflow_status === "Closed"
 ).length;
 
 const percent =
-Math.round((completed/total)*100);
+Math.round((completed / total) * 100);
 
 const bar =
 document.getElementById("progressFill");
@@ -188,12 +189,13 @@ if(!table) return;
 
 table.innerHTML="";
 
-if(!data || data.length===0){
+if(!data || data.length === 0){
 
-table.innerHTML=`
+table.innerHTML = `
 <tr>
 <td colspan="4">No Equipment Found</td>
-</tr>`;
+</tr>
+`;
 
 return;
 
@@ -205,9 +207,11 @@ const status = eq.workflow_status || "Not Started";
 
 const waiting = calculateWaitingDays(eq.shutdown_date);
 
+const unit = eq.unit || eq.unit_id || "-";
+
 const row = document.createElement("tr");
 
-row.style.cursor="pointer";
+row.style.cursor = "pointer";
 
 row.onclick = function(){
 
@@ -215,7 +219,7 @@ openEquipment(eq.tag_number);
 
 };
 
-row.innerHTML=`
+row.innerHTML = `
 
 <td>${eq.tag_number || "-"}</td>
 
@@ -223,7 +227,7 @@ row.innerHTML=`
 
 <td>${waiting}</td>
 
-<td>${eq.unit || eq.unit_id || "-"}</td>
+<td>${unit}</td>
 
 `;
 
@@ -276,9 +280,9 @@ document.getElementById("alertsContainer");
 
 if(!alertsBox) return;
 
-alertsBox.innerHTML="";
+alertsBox.innerHTML = "";
 
-const alertStatuses=[
+const alertStatuses = [
 
 "Observation Raised",
 "Recommendation Issued",
@@ -290,13 +294,14 @@ const alertStatuses=[
 alertStatuses.forEach(status=>{
 
 const items =
-data.filter(e=>e.workflow_status===status);
+data.filter(e=>e.workflow_status === status);
 
-if(items.length>0){
+if(items.length > 0){
 
-alertsBox.innerHTML+=`
+alertsBox.innerHTML += `
 
-<div class="alert-item">
+<div class="alert-item"
+onclick="filterStatus('${status}')">
 
 ${status} (${items.length})
 
@@ -318,7 +323,7 @@ console.error("Alert error:",err);
 
 
 // =======================================
-// HELPER
+// HELPER FUNCTION
 // =======================================
 
 function setText(id,value){
@@ -331,7 +336,7 @@ if(el) el.innerText = value;
 
 
 // =======================================
-// RELOAD ALL
+// RELOAD ALL DASHBOARD DATA
 // =======================================
 
 function reloadAll(){
@@ -344,7 +349,7 @@ loadAlerts();
 
 
 // =======================================
-// REALTIME UPDATE
+// REALTIME UPDATE FROM SUPABASE
 // =======================================
 
 supabaseClient
@@ -371,6 +376,8 @@ reloadAll();
 // =======================================
 
 document.addEventListener("DOMContentLoaded",()=>{
+
+console.log("Dashboard loaded");
 
 reloadAll();
 
