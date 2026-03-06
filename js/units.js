@@ -3,7 +3,7 @@
 const supabaseUrl = "https://lhktmcqjywduohrwsmzb.supabase.co";
 
 const supabaseKey =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2";
 
 const supabaseClient = supabase.createClient(
 supabaseUrl,
@@ -20,13 +20,11 @@ const {data,error} = await supabaseClient
 .select("*");
 
 if(error){
-
 console.error(error);
 return;
-
 }
 
-const units = [...new Set(data.map(e=>e.unit_id))];
+const units = [...new Set(data.map(e=>e.unit))];
 
 const container =
 document.getElementById("unitsContainer");
@@ -36,11 +34,11 @@ container.innerHTML="";
 units.forEach(unit=>{
 
 const total =
-data.filter(e=>e.unit_id===unit).length;
+data.filter(e=>e.unit===unit).length;
 
 const ndt =
 data.filter(e=>
-e.unit_id===unit &&
+e.unit===unit &&
 e.workflow_status==="NDT Inspection"
 ).length;
 
@@ -49,9 +47,7 @@ const card = document.createElement("div");
 card.className="unit-card";
 
 card.onclick=function(){
-
 openUnit(unit);
-
 };
 
 card.innerHTML=`
