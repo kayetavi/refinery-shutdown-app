@@ -1,4 +1,3 @@
-
 // =======================================
 // 🔥 SUPABASE CONNECTION
 // =======================================
@@ -9,8 +8,8 @@ const SUPABASE_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
 
 const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
+SUPABASE_URL,
+SUPABASE_KEY
 );
 
 
@@ -60,8 +59,6 @@ async function loadDashboard(){
 
 try{
 
-console.log("Loading dashboard...");
-
 const {data,error} = await supabaseClient
 .from("equipment")
 .select("*");
@@ -73,31 +70,41 @@ return;
 
 }
 
-if(!data || data.length===0){
+if(!data){
 
-console.log("No equipment data");
-
+console.log("No data found");
 return;
 
 }
 
 const totalEquipment = data.length;
 
+
+// ✅ UNIT FIX
 const totalUnits =
-[...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
+[...new Set(data.map(e=>e.unit || e.unit_id).filter(Boolean))].length;
+
+
+// =======================================
+// STATUS COUNTS
+// =======================================
 
 const shutdownCount =
-data.filter(e=>e.workflow_status !== "Closed").length;
+data.filter(e => e.workflow_status !== "Closed").length;
 
 const preClean =
-data.filter(e=>e.workflow_status === "Offered for Pre-Cleaning Inspection").length;
+data.filter(e => e.workflow_status === "Offered for Pre-Cleaning Inspection").length;
 
 const postClean =
-data.filter(e=>e.workflow_status === "Offered for Post-Cleaning Inspection").length;
+data.filter(e => e.workflow_status === "Offered for Post-Cleaning Inspection").length;
 
 const ndt =
-data.filter(e=>e.workflow_status === "NDT Inspection").length;
+data.filter(e => e.workflow_status === "NDT Inspection").length;
 
+
+// =======================================
+// UPDATE KPI
+// =======================================
 
 setText("totalUnits", totalUnits);
 setText("totalEquipment", totalEquipment);
@@ -105,6 +112,11 @@ setText("shutdownCount", shutdownCount);
 setText("preCleanCount", preClean);
 setText("postCleanCount", postClean);
 setText("ndtPending", ndt);
+
+
+// =======================================
+// PROGRESS
+// =======================================
 
 calculateProgress(data);
 
@@ -125,6 +137,8 @@ function calculateProgress(data){
 
 const total = data.length;
 
+if(total===0) return;
+
 const completed =
 data.filter(e =>
 e.workflow_status === "Ready for Box-Up" ||
@@ -132,7 +146,6 @@ e.workflow_status === "Closed"
 ).length;
 
 const percent =
-total === 0 ? 0 :
 Math.round((completed/total)*100);
 
 const bar =
@@ -210,7 +223,7 @@ row.innerHTML=`
 
 <td>${waiting}</td>
 
-<td>${eq.unit_id || "-"}</td>
+<td>${eq.unit || eq.unit_id || "-"}</td>
 
 `;
 
@@ -233,8 +246,6 @@ console.error("Equipment table error:",err);
 
 function openEquipment(tag){
 
-console.log("Opening equipment:",tag);
-
 window.location.href =
 "equipment-details.html?tag=" + encodeURIComponent(tag);
 
@@ -251,7 +262,7 @@ try{
 
 const {data,error} = await supabaseClient
 .from("equipment")
-.select("workflow_status");
+.select("workflow_status,tag_number");
 
 if(error){
 
@@ -278,16 +289,16 @@ const alertStatuses=[
 
 alertStatuses.forEach(status=>{
 
-const count =
-data.filter(e=>e.workflow_status===status).length;
+const items =
+data.filter(e=>e.workflow_status===status);
 
-if(count>0){
+if(items.length>0){
 
 alertsBox.innerHTML+=`
 
 <div class="alert-item">
 
-${status} (${count})
+${status} (${items.length})
 
 </div>
 
@@ -360,8 +371,6 @@ reloadAll();
 // =======================================
 
 document.addEventListener("DOMContentLoaded",()=>{
-
-console.log("Dashboard loaded");
 
 reloadAll();
 
