@@ -1,300 +1,196 @@
-/* ================= SUPABASE CONNECTION ================= */
-
-const supabaseUrl = "https://lhktmcqjywduohrwsmzb.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
+const supabaseUrl = "https://YOUR_PROJECT.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI";
 
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-
-/* ================= GET TAG FROM URL ================= */
-
+// URL se equipment id lena
 const urlParams = new URLSearchParams(window.location.search);
-const tag = urlParams.get("tag");
-
-let equipmentId = null;
-
-
-/* ================= PAGE INIT ================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-if(!tag){
-
-alert("No Equipment Tag Found in URL");
-
-return;
-
-}
+const equipmentId = urlParams.get("id");
 
 loadEquipment();
 
-});
+// EQUIPMENT LOAD
+async function loadEquipment() {
 
-
-/* ================= LOAD EQUIPMENT ================= */
-
-async function loadEquipment(){
-
-console.log("Loading equipment for tag:", tag);
-
-const { data, error } = await supabase
+let { data, error } = await supabase
 .from("equipment")
 .select("*")
-.eq("tag_number", tag)
+.eq("id", equipmentId)
 .single();
 
 if(error){
-
-console.error("Equipment Load Error:", error);
-
-alert("Equipment not found");
-
+console.log(error);
 return;
+}
+
+document.getElementById("tagNumber").innerText = data.tag;
+document.getElementById("unit").innerText = data.unit;
+document.getElementById("status").innerText = data.status;
+document.getElementById("shutdownDate").innerText = data.shutdown_date;
+
+highlightTimeline(data.status);
+
+loadObservation();
+loadRecommendation();
 
 }
 
-equipmentId = data.id;
+// STATUS UPDATE
+async function updateStatus(){
 
-document.getElementById("tagNumber").innerText = data.tag_number || "-";
-  document.getElementById("unit").innerText = data.unit || "-";
-document.getElementById("status").innerText = data.workflow_status || "-";
-document.getElementById("shutdownDate").innerText = data.shutdown_date || "-";
+let status = document.getElementById("statusSelect").value;
 
-updateTimeline(data.workflow_status);
+let { error } = await supabase
+.from("equipment")
+.update({ status: status })
+.eq("id", equipmentId);
 
-loadHistory();
+if(error){
+alert("Update Failed");
+return;
+}
+
+alert("Status Updated");
+
+loadEquipment();
 
 }
 
+// TIMELINE HIGHLIGHT
+function highlightTimeline(currentStatus){
 
-/* ================= TIMELINE UPDATE ================= */
+let steps = document.querySelectorAll(".timeline-step");
 
-function updateTimeline(status){
-
-const steps = document.querySelectorAll(".timeline-step");
-
-const workflow = [
-
-"Shutdown Completed",
-"Handed Over to Maintenance",
-"Maintenance Started",
-"Offered for Pre-Cleaning Inspection",
-"Observation Raised",
-"Recommendation Issued",
-"Recommendation Attended",
-"Offered for Post-Cleaning Inspection",
-"NDT Inspection",
-"Ready for Box-Up",
-"Closed"
-
-];
-
-const currentIndex = workflow.indexOf(status);
-
-steps.forEach((step,index)=>{
-
+steps.forEach(step=>{
 step.classList.remove("active");
 
-if(index <= currentIndex){
+if(step.innerText == currentStatus){
 step.classList.add("active");
 }
-
 });
 
 }
 
+// SAVE OBSERVATION
+async function saveObservation(){
 
-/* ================= UPDATE STATUS ================= */
+let text = document.getElementById("observationText").value;
 
-async function updateStatus(){
-
-if(!equipmentId){
-
-alert("Equipment not loaded");
-
+if(text == ""){
+alert("Write Observation");
 return;
-
 }
 
-const newStatus = document.getElementById("statusSelect").value;
-
-if(!newStatus){
-
-alert("Select Status");
-
-return;
-
+let { error } = await supabase
+.from("observation")
+.insert([
+{
+equipment_id: equipmentId,
+observation: text
 }
-
-const { error } = await supabase
-.from("equipment")
-.update({
-workflow_status: newStatus
-})
-.eq("id", equipmentId);
+]);
 
 if(error){
-
-console.error("Status Update Error:", error);
-
-alert("Update failed");
-
-}else{
-
-alert("Status Updated Successfully");
-
-document.getElementById("status").innerText = newStatus;
-
-updateTimeline(newStatus);
-
-}
-
-}
-
-
-/* ================= LOAD HISTORY ================= */
-
-async function loadHistory(){
-
-if(!equipmentId){
+alert("Save Failed");
 return;
 }
 
-const { data, error } = await supabase
-.from("recommendations")
+document.getElementById("observationText").value="";
+
+loadObservation();
+
+}
+
+// LOAD OBSERVATION
+async function loadObservation(){
+
+let { data } = await supabase
+.from("observation")
 .select("*")
 .eq("equipment_id", equipmentId)
 .order("created_at",{ascending:false});
 
-if(error){
+let table = document.getElementById("observationHistory");
 
-console.error("History Load Error:", error);
+table.innerHTML="";
 
+if(data.length==0){
+table.innerHTML="<tr><td colspan='2'>No Observation</td></tr>";
 return;
-
 }
 
-const obsTable = document.getElementById("observationHistory");
-const recTable = document.getElementById("recommendationHistory");
+data.forEach(row=>{
 
-obsTable.innerHTML="";
-recTable.innerHTML="";
+let tr=document.createElement("tr");
 
-data.forEach(item=>{
+tr.innerHTML=
+`<td>${row.created_at.substring(0,10)}</td>
+<td>${row.observation}</td>`;
 
-const row = `
-<tr>
-<td>${new Date(item.created_at).toLocaleDateString()}</td>
-<td>${item.text}</td>
-</tr>
-`;
-
-if(item.type==="observation"){
-obsTable.innerHTML += row;
-}
-
-if(item.type==="recommendation"){
-recTable.innerHTML += row;
-}
+table.appendChild(tr);
 
 });
 
 }
 
-
-/* ================= SAVE OBSERVATION ================= */
-
-async function saveObservation(){
-
-if(!equipmentId){
-
-alert("Equipment not loaded");
-
-return;
-
-}
-
-const text = document.getElementById("observationText").value.trim();
-
-if(text === ""){
-
-alert("Enter observation");
-
-return;
-
-}
-
-const { error } = await supabase
-.from("recommendations")
-.insert({
-equipment_id: equipmentId,
-type:"observation",
-text:text
-});
-
-if(error){
-
-console.error("Observation Save Error:", error);
-
-alert("Error saving observation");
-
-return;
-
-}
-
-alert("Observation Saved");
-
-document.getElementById("observationText").value="";
-
-loadHistory();
-
-}
-
-
-/* ================= SAVE RECOMMENDATION ================= */
-
+// SAVE RECOMMENDATION
 async function saveRecommendation(){
 
-if(!equipmentId){
+let text = document.getElementById("recommendationText").value;
 
-alert("Equipment not loaded");
-
+if(text==""){
+alert("Write Recommendation");
 return;
-
 }
 
-const text = document.getElementById("recommendationText").value.trim();
-
-if(text === ""){
-
-alert("Enter recommendation");
-
-return;
-
-}
-
-const { error } = await supabase
-.from("recommendations")
-.insert({
+let { error } = await supabase
+.from("recommendation")
+.insert([
+{
 equipment_id: equipmentId,
-type:"recommendation",
-text:text
-});
+recommendation: text
+}
+]);
 
 if(error){
-
-console.error("Recommendation Save Error:", error);
-
-alert("Error saving recommendation");
-
+alert("Save Failed");
 return;
-
 }
-
-alert("Recommendation Saved");
 
 document.getElementById("recommendationText").value="";
 
-loadHistory();
+loadRecommendation();
+
+}
+
+// LOAD RECOMMENDATION
+async function loadRecommendation(){
+
+let { data } = await supabase
+.from("recommendation")
+.select("*")
+.eq("equipment_id", equipmentId)
+.order("created_at",{ascending:false});
+
+let table = document.getElementById("recommendationHistory");
+
+table.innerHTML="";
+
+if(data.length==0){
+table.innerHTML="<tr><td colspan='2'>No Recommendation</td></tr>";
+return;
+}
+
+data.forEach(row=>{
+
+let tr=document.createElement("tr");
+
+tr.innerHTML=
+`<td>${row.created_at.substring(0,10)}</td>
+<td>${row.recommendation}</td>`;
+
+table.appendChild(tr);
+
+});
 
 }
