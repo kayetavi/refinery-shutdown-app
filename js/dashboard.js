@@ -3,7 +3,9 @@
 // =======================================
 
 const SUPABASE_URL = "https://lhktmcqjywduohrwsmzb.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI";
+
+const SUPABASE_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
 
 const supabaseClient = supabase.createClient(
   SUPABASE_URL,
@@ -16,17 +18,19 @@ const supabaseClient = supabase.createClient(
 // =======================================
 
 const STATUS_FLOW = [
-  "Shutdown Completed",
-  "Handed Over to Maintenance",
-  "Maintenance Started",
-  "Offered for Pre-Cleaning Inspection",
-  "Observation Raised",
-  "Recommendation Issued",
-  "Recommendation Attended",
-  "Offered for Post-Cleaning Inspection",
-  "NDT Inspection",
-  "Ready for Box-Up",
-  "Closed"
+
+"Shutdown Completed",
+"Handed Over to Maintenance",
+"Maintenance Started",
+"Offered for Pre-Cleaning Inspection",
+"Observation Raised",
+"Recommendation Issued",
+"Recommendation Attended",
+"Offered for Post-Cleaning Inspection",
+"NDT Inspection",
+"Ready for Box-Up",
+"Closed"
+
 ];
 
 
@@ -36,11 +40,11 @@ const STATUS_FLOW = [
 
 function calculateWaitingDays(date){
 
-  if(!date) return "0 Days";
+if(!date) return "0 Days";
 
-  const diff = new Date() - new Date(date);
+const diff = new Date() - new Date(date);
 
-  return Math.floor(diff/(1000*60*60*24))+" Days";
+return Math.floor(diff/(1000*60*60*24)) + " Days";
 
 }
 
@@ -51,42 +55,48 @@ function calculateWaitingDays(date){
 
 async function loadDashboard(){
 
-  const {data,error} = await supabaseClient
-  .from("equipment")
-  .select("unit_id,workflow_status");
+try{
 
-  if(error){
-    console.log(error);
-    return;
-  }
+const {data,error} = await supabaseClient
+.from("equipment")
+.select("unit_id,workflow_status");
 
-  const totalEquipment = data.length;
+if(error) throw error;
 
-  const totalUnits =
-  [...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
+if(!data) return;
 
-  const shutdownCount =
-  data.filter(e=>e.workflow_status!=="Closed").length;
+const totalEquipment = data.length;
 
-  const preClean =
-  data.filter(e=>e.workflow_status==="Offered for Pre-Cleaning Inspection").length;
+const totalUnits =
+[...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
 
-  const postClean =
-  data.filter(e=>e.workflow_status==="Offered for Post-Cleaning Inspection").length;
+const shutdownCount =
+data.filter(e=>e.workflow_status !== "Closed").length;
 
-  const ndt =
-  data.filter(e=>e.workflow_status==="NDT Inspection").length;
+const preClean =
+data.filter(e=>e.workflow_status === "Offered for Pre-Cleaning Inspection").length;
 
+const postClean =
+data.filter(e=>e.workflow_status === "Offered for Post-Cleaning Inspection").length;
 
-  setText("totalUnits",totalUnits);
-  setText("totalEquipment",totalEquipment);
-  setText("shutdownCount",shutdownCount);
-  setText("preCleanCount",preClean);
-  setText("postCleanCount",postClean);
-  setText("ndtPending",ndt);
+const ndt =
+data.filter(e=>e.workflow_status === "NDT Inspection").length;
 
 
-  calculateProgress(data);
+setText("totalUnits", totalUnits);
+setText("totalEquipment", totalEquipment);
+setText("shutdownCount", shutdownCount);
+setText("preCleanCount", preClean);
+setText("postCleanCount", postClean);
+setText("ndtPending", ndt);
+
+calculateProgress(data);
+
+}catch(err){
+
+console.error("Dashboard Error:", err);
+
+}
 
 }
 
@@ -97,27 +107,27 @@ async function loadDashboard(){
 
 function calculateProgress(data){
 
-  const total = data.length;
+const total = data.length;
 
-  const completed =
-  data.filter(e =>
-  e.workflow_status==="Ready for Box-Up" ||
-  e.workflow_status==="Closed"
-  ).length;
+const completed =
+data.filter(e =>
+e.workflow_status === "Ready for Box-Up" ||
+e.workflow_status === "Closed"
+).length;
 
-  const percent =
-  total===0 ? 0 :
-  Math.round((completed/total)*100);
+const percent =
+total === 0 ? 0 :
+Math.round((completed/total)*100);
 
-  const bar =
-  document.getElementById("progressFill");
+const bar =
+document.getElementById("progressFill");
 
-  if(bar){
+if(bar){
 
-  bar.style.width = percent+"%";
-  bar.innerText = percent+"%";
+bar.style.width = percent + "%";
+bar.innerText = percent + "%";
 
-  }
+}
 
 }
 
@@ -128,118 +138,130 @@ function calculateProgress(data){
 
 async function loadEquipmentTable(){
 
-  const {data,error} = await supabaseClient
-  .from("equipment")
-  .select("tag_number,workflow_status,shutdown_date")
-  .order("tag_number",{ascending:true});
+try{
 
-  const table =
-  document.getElementById("cduTableBody");
+const {data,error} = await supabaseClient
+.from("equipment")
+.select("tag_number,workflow_status,shutdown_date,unit_id")
+.order("tag_number",{ascending:true});
 
-  if(!table) return;
+if(error) throw error;
 
-  table.innerHTML="";
+const table =
+document.getElementById("cduTableBody");
 
-  if(error){
-  console.log(error);
-  return;
-  }
+if(!table) return;
 
-  if(!data || data.length===0){
+table.innerHTML="";
 
-  table.innerHTML=`
-  <tr>
-  <td colspan="4">No Equipment Found</td>
-  </tr>`;
+if(!data || data.length===0){
 
-  return;
+table.innerHTML=`
+<tr>
+<td colspan="4">No Equipment Found</td>
+</tr>`;
 
-  }
+return;
 
-  data.forEach(eq=>{
+}
 
-  table.innerHTML+=`
+data.forEach(eq=>{
 
-  <tr onclick="openEquipment('${eq.tag_number}')">
+table.innerHTML+=`
 
-  <td>${eq.tag_number}</td>
+<tr onclick="openEquipment('${eq.tag_number}')" style="cursor:pointer">
 
-  <td>${eq.workflow_status || "Not Started"}</td>
+<td>${eq.tag_number}</td>
 
-  <td>${calculateWaitingDays(eq.shutdown_date)}</td>
+<td>${eq.workflow_status || "Not Started"}</td>
 
-  <td>${eq.workflow_status || "-"}</td>
+<td>${calculateWaitingDays(eq.shutdown_date)}</td>
 
-  </tr>
+<td>${eq.workflow_status || "-"}</td>
 
-  `;
+</tr>
 
-  });
+`;
+
+});
+
+}catch(err){
+
+console.error("Equipment Load Error:", err);
+
+}
 
 }
 
 
 // =======================================
-// OPEN EQUIPMENT
+// OPEN EQUIPMENT DETAILS
 // =======================================
 
 function openEquipment(tag){
 
-  window.location =
-  "equipment-details.html?tag="+tag;
+window.location.href =
+"equipment-details.html?tag=" + encodeURIComponent(tag);
 
 }
 
 
 // =======================================
-// ALERTS SYSTEM
+// ALERT SYSTEM
 // =======================================
 
 async function loadAlerts(){
 
-  const {data,error} = await supabaseClient
-  .from("equipment")
-  .select("workflow_status");
+try{
 
-  if(error) return;
+const {data,error} = await supabaseClient
+.from("equipment")
+.select("workflow_status");
 
-  const alertsBox =
-  document.getElementById("alertsContainer");
+if(error) throw error;
 
-  if(!alertsBox) return;
+const alertsBox =
+document.getElementById("alertsContainer");
 
-  alertsBox.innerHTML="";
+if(!alertsBox) return;
 
-  const alertStatuses=[
+alertsBox.innerHTML="";
 
-  "Observation Raised",
-  "Recommendation Issued",
-  "NDT Inspection",
-  "Maintenance Started"
+const alertStatuses=[
 
-  ];
+"Observation Raised",
+"Recommendation Issued",
+"NDT Inspection",
+"Maintenance Started"
 
+];
 
-  alertStatuses.forEach(status=>{
+alertStatuses.forEach(status=>{
 
-  const count =
-  data.filter(e=>e.workflow_status===status).length;
+const count =
+data.filter(e=>e.workflow_status===status).length;
 
-  if(count>0){
+if(count>0){
 
-  alertsBox.innerHTML+=`
+alertsBox.innerHTML+=`
 
-  <div class="alert-item">
+<div class="alert-item">
 
-  ${status} (${count})
+${status} (${count})
 
-  </div>
+</div>
 
-  `;
+`;
 
-  }
+}
 
-  });
+});
+
+}catch(err){
+
+console.error("Alert Error:", err);
+
+}
 
 }
 
@@ -250,22 +272,22 @@ async function loadAlerts(){
 
 function setText(id,value){
 
-  const el=document.getElementById(id);
+const el = document.getElementById(id);
 
-  if(el) el.innerText=value;
+if(el) el.innerText = value;
 
 }
 
 
 // =======================================
-// RELOAD
+// RELOAD ALL DATA
 // =======================================
 
 function reloadAll(){
 
-  loadDashboard();
-  loadEquipmentTable();
-  loadAlerts();
+loadDashboard();
+loadEquipmentTable();
+loadAlerts();
 
 }
 
@@ -290,38 +312,35 @@ reloadAll();
 
 
 // =======================================
-// INITIAL LOAD
+// PAGE LOAD
 // =======================================
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-  loadDashboard();
-  loadEquipmentTable();
-  loadAlerts();
+reloadAll();
 
 });
 
-// ============================
+
+// =======================================
 // CARD NAVIGATION
-// ============================
+// =======================================
 
 function goToUnits(){
 
-window.location="units.html";
+window.location.href = "units.html";
 
 }
-
 
 function goToEquipment(){
 
-window.location="equipment.html";
+window.location.href = "equipment.html";
 
 }
 
-
 function filterStatus(status){
 
-window.location=
-"equipment.html?status="+encodeURIComponent(status);
+window.location.href =
+"equipment.html?status=" + encodeURIComponent(status);
 
 }
