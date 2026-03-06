@@ -4,45 +4,165 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Refinery Shutdown Dashboard</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <link rel="stylesheet" href="css/style.css">
 
-<!-- FIXED SUPABASE VERSION -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f6f9;
+}
+
+/* TOP NAV */
+
+.top-nav{
+background:#1f3c88;
+color:white;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 20px;
+}
+
+.top-nav nav a{
+color:white;
+margin:0 10px;
+text-decoration:none;
+}
+
+/* KPI CARDS */
+
+.metrics{
+display:grid;
+grid-template-columns:repeat(6,1fr);
+gap:10px;
+padding:20px;
+}
+
+.card{
+background:white;
+border-radius:8px;
+padding:15px;
+cursor:pointer;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card h2{
+margin:5px 0;
+}
+
+.orange{border-left:6px solid #ff7f0e;}
+.blue{border-left:6px solid #1f77b4;}
+.red{border-left:6px solid #d62728;}
+.yellow{border-left:6px solid #f1c40f;}
+.green{border-left:6px solid #2ecc71;}
+.purple{border-left:6px solid #9b59b6;}
+
+/* MAIN GRID */
+
+.main-layout{
+display:grid;
+grid-template-columns:300px 1fr;
+gap:20px;
+padding:20px;
+}
+
+/* ALERT PANEL */
+
+.alerts-panel{
+background:white;
+padding:15px;
+border-radius:8px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.alert-item{
+background:#fff3cd;
+padding:8px;
+margin:5px 0;
+border-radius:4px;
+}
+
+/* CONTENT */
+
+.content-panel{
+background:white;
+padding:20px;
+border-radius:8px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* PROGRESS */
+
+.progress-bar{
+background:#ddd;
+height:20px;
+border-radius:10px;
+overflow:hidden;
+}
+
+.progress-fill{
+background:#1f77b4;
+height:100%;
+text-align:center;
+color:white;
+font-size:12px;
+}
+
+/* TABLE */
+
+.status-table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+.status-table th{
+background:#f2f2f2;
+padding:10px;
+}
+
+.status-table td{
+padding:10px;
+border-bottom:1px solid #ddd;
+}
+
+.status-table tr:hover{
+background:#f9f9f9;
+}
+
+</style>
 
 </head>
 
-
 <body>
-
-
-<!-- ================= TOP NAV ================= -->
 
 <header class="top-nav">
 
-<div class="logo">🛢 Refinery Shutdown Dashboard</div>
+<div>🛢 Refinery Shutdown Dashboard</div>
 
 <nav>
-<a href="index.html">Home</a>
+
+<a href="dashboard.html">Home</a>
 <a href="units.html">Units</a>
 <a href="equipment.html">Equipment</a>
 <a href="reports.html">Reports</a>
-<a href="admin.html">Admin</a>
+
 </nav>
 
-<div class="user-area">
-<span id="userEmail"></span>
 <button onclick="logout()">Logout</button>
-</div>
 
 </header>
 
 
-
-<!-- ================= METRICS ================= -->
+<!-- KPI CARDS -->
 
 <section class="metrics">
 
@@ -79,13 +199,9 @@ NDT Pending
 </section>
 
 
-
-<!-- ================= MAIN LAYOUT ================= -->
+<!-- MAIN -->
 
 <section class="main-layout">
-
-
-<!-- ALERT PANEL -->
 
 <aside class="alerts-panel">
 
@@ -96,31 +212,17 @@ NDT Pending
 </aside>
 
 
-
-<!-- CONTENT PANEL -->
-
 <div class="content-panel">
 
 <h3>Equipment Shutdown Overview</h3>
-
-
-<!-- PROGRESS -->
-
-<div class="progress-section">
 
 <label>Shutdown Progress</label>
 
 <div class="progress-bar">
 
-<div class="progress-fill" id="progressFill">0%</div>
+<div id="progressFill" class="progress-fill">0%</div>
 
 </div>
-
-</div>
-
-
-
-<!-- EQUIPMENT TABLE -->
 
 <table class="status-table">
 
@@ -149,41 +251,8 @@ NDT Pending
 
 </section>
 
-
-
-<script>
-
-/* ================= NAVIGATION FUNCTIONS ================= */
-
-function goToUnits(){
-
-window.location.href="units.html";
-
-}
-
-function goToEquipment(){
-
-window.location.href="equipment.html";
-
-}
-
-function filterStatus(status){
-
-window.location.href=
-"equipment.html?status="+encodeURIComponent(status);
-
-}
-
-function logout(){
-
-alert("Logout feature coming soon");
-
-}
-
-/* ================= YOUR EXISTING JS ================= */
-
-
-</script>
 <script src="js/dashboard.js"></script>
+
 </body>
+
 </html>
