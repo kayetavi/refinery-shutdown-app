@@ -1,3 +1,4 @@
+
 // =======================================
 // 🔥 SUPABASE CONNECTION
 // =======================================
@@ -14,7 +15,7 @@ const supabaseClient = supabase.createClient(
 
 
 // =======================================
-// MASTER WORKFLOW
+// WORKFLOW MASTER
 // =======================================
 
 const STATUS_FLOW = [
@@ -40,11 +41,13 @@ const STATUS_FLOW = [
 
 function calculateWaitingDays(date){
 
-if(!date) return "0 Days";
+if(!date) return "-";
 
 const diff = new Date() - new Date(date);
 
-return Math.floor(diff/(1000*60*60*24)) + " Days";
+const days = Math.floor(diff/(1000*60*60*24));
+
+return days + " Days";
 
 }
 
@@ -57,13 +60,26 @@ async function loadDashboard(){
 
 try{
 
+console.log("Loading dashboard...");
+
 const {data,error} = await supabaseClient
 .from("equipment")
-.select("unit_id,workflow_status");
+.select("*");
 
-if(error) throw error;
+if(error){
 
-if(!data) return;
+console.error("Supabase error:",error);
+return;
+
+}
+
+if(!data || data.length===0){
+
+console.log("No equipment data");
+
+return;
+
+}
 
 const totalEquipment = data.length;
 
@@ -94,7 +110,7 @@ calculateProgress(data);
 
 }catch(err){
 
-console.error("Dashboard Error:", err);
+console.error("Dashboard Load Error:",err);
 
 }
 
@@ -142,10 +158,15 @@ try{
 
 const {data,error} = await supabaseClient
 .from("equipment")
-.select("tag_number,workflow_status,shutdown_date,unit_id")
+.select("*")
 .order("tag_number",{ascending:true});
 
-if(error) throw error;
+if(error){
+
+console.error("Equipment load error:",error);
+return;
+
+}
 
 const table =
 document.getElementById("cduTableBody");
@@ -167,27 +188,39 @@ return;
 
 data.forEach(eq=>{
 
-table.innerHTML+=`
+const status = eq.workflow_status || "Not Started";
 
-<tr onclick="openEquipment('${eq.tag_number}')" style="cursor:pointer">
+const waiting = calculateWaitingDays(eq.shutdown_date);
 
-<td>${eq.tag_number}</td>
+const row = document.createElement("tr");
 
-<td>${eq.workflow_status || "Not Started"}</td>
+row.style.cursor="pointer";
 
-<td>${calculateWaitingDays(eq.shutdown_date)}</td>
+row.onclick = function(){
 
-<td>${eq.workflow_status || "-"}</td>
+openEquipment(eq.tag_number);
 
-</tr>
+};
+
+row.innerHTML=`
+
+<td>${eq.tag_number || "-"}</td>
+
+<td>${status}</td>
+
+<td>${waiting}</td>
+
+<td>${eq.unit_id || "-"}</td>
 
 `;
+
+table.appendChild(row);
 
 });
 
 }catch(err){
 
-console.error("Equipment Load Error:", err);
+console.error("Equipment table error:",err);
 
 }
 
@@ -195,10 +228,12 @@ console.error("Equipment Load Error:", err);
 
 
 // =======================================
-// OPEN EQUIPMENT DETAILS
+// EQUIPMENT DETAILS PAGE
 // =======================================
 
 function openEquipment(tag){
+
+console.log("Opening equipment:",tag);
 
 window.location.href =
 "equipment-details.html?tag=" + encodeURIComponent(tag);
@@ -218,7 +253,12 @@ const {data,error} = await supabaseClient
 .from("equipment")
 .select("workflow_status");
 
-if(error) throw error;
+if(error){
+
+console.error(error);
+return;
+
+}
 
 const alertsBox =
 document.getElementById("alertsContainer");
@@ -259,7 +299,7 @@ ${status} (${count})
 
 }catch(err){
 
-console.error("Alert Error:", err);
+console.error("Alert error:",err);
 
 }
 
@@ -280,7 +320,7 @@ if(el) el.innerText = value;
 
 
 // =======================================
-// RELOAD ALL DATA
+// RELOAD ALL
 // =======================================
 
 function reloadAll(){
@@ -300,7 +340,11 @@ supabaseClient
 .channel("equipment-live")
 .on(
 "postgres_changes",
-{event:"*",schema:"public",table:"equipment"},
+{
+event:"*",
+schema:"public",
+table:"equipment"
+},
 (payload)=>{
 
 console.log("Realtime update:",payload);
@@ -316,6 +360,8 @@ reloadAll();
 // =======================================
 
 document.addEventListener("DOMContentLoaded",()=>{
+
+console.log("Dashboard loaded");
 
 reloadAll();
 
