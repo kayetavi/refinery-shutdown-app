@@ -45,34 +45,39 @@
 
 <section class="metrics">
 
-<div class="metric orange">
-<h4>Total Units</h4>
-<p id="totalUnits">0</p>
+<div class="card orange" onclick="goToUnits()">
+Total Units
+<h2 id="totalUnits">0</h2>
 </div>
 
-<div class="metric blue">
-<h4>Total Equipment</h4>
-<p id="totalEquipment">0</p>
+
+<div class="card blue" onclick="goToEquipment()">
+Total Equipment
+<h2 id="totalEquipment">0</h2>
 </div>
 
-<div class="metric red">
-<h4>Shutdown Equipment</h4>
-<p id="shutdownCount">0</p>
+
+<div class="card red" onclick="goToEquipment()">
+Shutdown Equipment
+<h2 id="shutdownCount">0</h2>
 </div>
 
-<div class="metric yellow">
-<h4>Pre-Cleaning Pending</h4>
-<p id="preCleanCount">0</p>
+
+<div class="card yellow" onclick="filterStatus('Offered for Pre-Cleaning Inspection')">
+Pre-Cleaning Pending
+<h2 id="preCleanCount">0</h2>
 </div>
 
-<div class="metric green">
-<h4>Post-Cleaning Offered</h4>
-<p id="postCleanCount">0</p>
+
+<div class="card green" onclick="filterStatus('Offered for Post-Cleaning Inspection')">
+Post-Cleaning Offered
+<h2 id="postCleanCount">0</h2>
 </div>
 
-<div class="metric purple">
-<h4>NDT Pending</h4>
-<p id="ndtPending">0</p>
+
+<div class="card purple" onclick="filterStatus('NDT Inspection')">
+NDT Pending
+<h2 id="ndtPending">0</h2>
 </div>
 
 </section>
