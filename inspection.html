@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Equipment Inspection</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f9;
+margin:0;
+}
+
+header{
+background:#1f3c88;
+color:white;
+padding:15px;
+}
+
+.container{
+width:900px;
+margin:auto;
+margin-top:30px;
+background:white;
+padding:20px;
+border-radius:8px;
+}
+
+input,select,textarea{
+width:100%;
+padding:8px;
+margin-top:5px;
+margin-bottom:15px;
+}
+
+button{
+padding:10px 15px;
+background:#1f77b4;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h2>🛢 Equipment Inspection System</h2>
+</header>
+
+<div class="container">
+
+<h3>Equipment Inspection</h3>
+
+<label>Unit</label>
+<input id="unit">
+
+<label>Equipment Tag</label>
+<input id="tag">
+
+<label>Inspector Name</label>
+<input id="inspector">
+
+<label>Inspection Date</label>
+<input type="date" id="date">
+
+<label>Inspection Status</label>
+
+<select id="status">
+
+<option>Shutdown Completed</option>
+<option>Maintenance Started</option>
+<option>Pre Cleaning Inspection</option>
+<option>Observation Raised</option>
+<option>Recommendation Issued</option>
+<option>Repair Completed</option>
+<option>Closed</option>
+
+</select>
+
+<label>Observation</label>
+<textarea id="observation"></textarea>
+
+<label>Recommendation</label>
+<textarea id="recommendation"></textarea>
+
+<label>Upload Damage Photo</label>
+<input type="file" id="damagePhoto">
+
+<label>Upload NDT Report</label>
+<input type="file" id="ndtReport">
+
+<button onclick="saveInspection()">Save Inspection</button>
+
+</div>
+
+<script src="js/inspection.js"></script>
+
+</body>
+</html>
