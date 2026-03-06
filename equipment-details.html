@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Equipment Details</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+
+<body>
+
+<header class="top-nav">
+
+<div class="logo">🛢 Refinery Shutdown</div>
+
+<nav>
+<a href="dashboard.html">Dashboard</a>
+<a href="equipment.html">Equipment</a>
+</nav>
+
+</header>
+
+
+<section class="content-panel">
+
+<h2>Equipment Details</h2>
+
+<div class="details-box">
+
+<p><b>Tag Number:</b> <span id="tagNumber"></span></p>
+
+<p><b>Status:</b> <span id="status"></span></p>
+
+<p><b>Shutdown Date:</b> <span id="shutdownDate"></span></p>
+
+<p><b>Unit:</b> <span id="unit"></span></p>
+
+</div>
+
+
+<h3>Update Workflow</h3>
+
+<select id="statusSelect">
+
+<option>Shutdown Completed</option>
+<option>Handed Over to Maintenance</option>
+<option>Maintenance Started</option>
+<option>Offered for Pre-Cleaning Inspection</option>
+<option>Observation Raised</option>
+<option>Recommendation Issued</option>
+<option>Recommendation Attended</option>
+<option>Offered for Post-Cleaning Inspection</option>
+<option>NDT Inspection</option>
+<option>Ready for Box-Up</option>
+<option>Closed</option>
+
+</select>
+
+<button onclick="updateStatus()">Update Status</button>
+
+
+
+<h3>Observation</h3>
+
+<textarea id="observationText" placeholder="Enter Observation"></textarea>
+
+<button onclick="saveObservation()">Save Observation</button>
+
+
+
+<h3>Recommendation</h3>
+
+<textarea id="recommendationText" placeholder="Enter Recommendation"></textarea>
+
+<button onclick="saveRecommendation()">Save Recommendation</button>
+
+
+</section>
+
+
+<script src="js/equipment-details.js"></script>
+
+</body>
+</html>
