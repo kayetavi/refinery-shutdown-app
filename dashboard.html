@@ -10,7 +10,8 @@
 
 <link rel="stylesheet" href="css/style.css">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<!-- FIXED SUPABASE VERSION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
 
@@ -50,30 +51,25 @@ Total Units
 <h2 id="totalUnits">0</h2>
 </div>
 
-
 <div class="card blue" onclick="goToEquipment()">
 Total Equipment
 <h2 id="totalEquipment">0</h2>
 </div>
-
 
 <div class="card red" onclick="goToEquipment()">
 Shutdown Equipment
 <h2 id="shutdownCount">0</h2>
 </div>
 
-
 <div class="card yellow" onclick="filterStatus('Offered for Pre-Cleaning Inspection')">
 Pre-Cleaning Pending
 <h2 id="preCleanCount">0</h2>
 </div>
 
-
 <div class="card green" onclick="filterStatus('Offered for Post-Cleaning Inspection')">
 Post-Cleaning Offered
 <h2 id="postCleanCount">0</h2>
 </div>
-
 
 <div class="card purple" onclick="filterStatus('NDT Inspection')">
 NDT Pending
@@ -87,6 +83,7 @@ NDT Pending
 <!-- ================= MAIN LAYOUT ================= -->
 
 <section class="main-layout">
+
 
 <!-- ALERT PANEL -->
 
@@ -156,267 +153,36 @@ NDT Pending
 
 <script>
 
+/* ================= NAVIGATION FUNCTIONS ================= */
 
+function goToUnits(){
 
-/* ================= SUPABASE ================= */
-
-const SUPABASE_URL = "https://lhktmcqjywduohrwsmzb.supabase.co";
-
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI2NDM3NH0.JYT2qavvtwESRpJNTNmBmg9p78_u-lD8sjslnFaAZgQ";
-
-
-const { createClient } = supabase;
-
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-
-
-/* ================= WAITING DAYS ================= */
-
-function calculateWaitingDays(date){
-
-if(!date) return "0 Days";
-
-const diff = new Date() - new Date(date);
-
-return Math.floor(diff/(1000*60*60*24))+" Days";
+window.location.href="units.html";
 
 }
 
+function goToEquipment(){
 
-
-/* ================= DASHBOARD METRICS ================= */
-
-async function loadDashboard(){
-
-const {data,error} = await supabaseClient
-.from("equipment")
-.select("unit_id,workflow_status");
-
-if(error){
-
-console.log(error);
-
-return;
+window.location.href="equipment.html";
 
 }
 
-const totalEquipment = data.length;
+function filterStatus(status){
 
-const totalUnits =
-[...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
-
-const shutdownCount =
-data.filter(e=>e.workflow_status!=="Closed").length;
-
-const preClean =
-data.filter(e=>e.workflow_status==="Offered for Pre-Cleaning Inspection").length;
-
-const postClean =
-data.filter(e=>e.workflow_status==="Offered for Post-Cleaning Inspection").length;
-
-const ndt =
-data.filter(e=>e.workflow_status==="NDT Inspection").length;
-
-
-document.getElementById("totalUnits").innerText = totalUnits;
-
-document.getElementById("totalEquipment").innerText = totalEquipment;
-
-document.getElementById("shutdownCount").innerText = shutdownCount;
-
-document.getElementById("preCleanCount").innerText = preClean;
-
-document.getElementById("postCleanCount").innerText = postClean;
-
-document.getElementById("ndtPending").innerText = ndt;
-
-
-
-/* PROGRESS */
-
-const completed =
-data.filter(e=>
-e.workflow_status==="Ready for Box-Up" ||
-e.workflow_status==="Closed"
-).length;
-
-
-const percent =
-totalEquipment===0 ? 0 :
-Math.round((completed/totalEquipment)*100);
-
-
-const bar = document.getElementById("progressFill");
-
-bar.style.width = percent+"%";
-
-bar.innerText = percent+"%";
+window.location.href=
+"equipment.html?status="+encodeURIComponent(status);
 
 }
 
+function logout(){
 
-
-/* ================= LOAD EQUIPMENT TABLE ================= */
-
-async function loadEquipmentTable(){
-
-const {data,error} = await supabaseClient
-.from("equipment")
-.select("tag_number,workflow_status,shutdown_date")
-.order("tag_number",{ascending:true});
-
-const table = document.getElementById("cduTableBody");
-
-table.innerHTML="";
-
-
-if(error){
-
-console.log(error);
-
-return;
+alert("Logout feature coming soon");
 
 }
 
-if(!data || data.length===0){
-
-table.innerHTML = `
-<tr>
-<td colspan="4">No Equipment Found</td>
-</tr>`;
-
-return;
-
-}
-
-
-data.forEach(eq=>{
-
-table.innerHTML +=`
-
-<tr onclick="openEquipment('${eq.tag_number}')">
-
-<td>${eq.tag_number}</td>
-
-<td>${eq.workflow_status || "Not Started"}</td>
-
-<td>${calculateWaitingDays(eq.shutdown_date)}</td>
-
-<td>${eq.workflow_status || "-"}</td>
-
-</tr>
-
-`;
-
-});
-
-}
-
-
-
-/* ================= OPEN EQUIPMENT ================= */
-
-function openEquipment(tag){
-
-window.location = "equipment-details.html?tag="+tag;
-
-}
-
-
-
-/* ================= ALERT SYSTEM ================= */
-
-async function loadAlerts(){
-
-const {data,error} = await supabaseClient
-.from("equipment")
-.select("workflow_status");
-
-if(error) return;
-
-const alertsBox = document.getElementById("alertsContainer");
-
-alertsBox.innerHTML="";
-
-
-const alertStatuses = [
-
-"Observation Raised",
-"Recommendation Issued",
-"NDT Inspection",
-"Maintenance Started"
-
-];
-
-
-alertStatuses.forEach(status=>{
-
-const count =
-data.filter(e=>e.workflow_status===status).length;
-
-if(count>0){
-
-alertsBox.innerHTML +=`
-
-<div style="
-background:#ef4444;
-color:white;
-padding:8px;
-margin-bottom:6px;
-border-radius:6px">
-
-${status} (${count})
-
-</div>
-
-`;
-
-}
-
-});
-
-}
-
-
-
-/* ================= REALTIME UPDATE ================= */
-
-supabaseClient
-.channel("equipment-changes")
-.on(
-"postgres_changes",
-{event:"*",schema:"public",table:"equipment"},
-(payload)=>{
-
-console.log("Realtime Update:",payload);
-
-loadDashboard();
-
-loadEquipmentTable();
-
-loadAlerts();
-
-}
-)
-.subscribe();
-
-
-
-/* ================= INITIAL LOAD ================= */
-
-document.addEventListener("DOMContentLoaded",()=>{
-
-loadDashboard();
-
-loadEquipmentTable();
-
-loadAlerts();
-
-});
+/* ================= YOUR EXISTING JS ================= */
 
 </script>
-
 
 </body>
 </html>
