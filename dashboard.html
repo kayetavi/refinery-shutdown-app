@@ -6,84 +6,57 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Refinery Shutdown Inspection Dashboard</title>
+<title>Refinery Shutdown Dashboard</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<link rel="stylesheet" href="css/style.css">
+
 <style>
 
-/* GLOBAL */
-
 body{
-font-family:Segoe UI, Arial;
+font-family:Arial;
 margin:0;
-background:#eef1f6;
-color:#333;
+background:#f4f6f9;
 }
 
 /* TOP NAV */
 
 .top-nav{
-background:#0b3d91;
+background:#1f3c88;
 color:white;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:12px 25px;
-position:sticky;
-top:0;
-z-index:1000;
-}
-
-.logo{
-font-size:20px;
-font-weight:bold;
+padding:12px 20px;
 }
 
 .top-nav nav a{
 color:white;
-margin:0 12px;
+margin:0 10px;
 text-decoration:none;
-font-size:14px;
-}
-
-.top-nav nav a:hover{
-text-decoration:underline;
 }
 
 /* KPI CARDS */
 
 .metrics{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:15px;
+grid-template-columns:repeat(6,1fr);
+gap:10px;
 padding:20px;
 }
 
 .card{
 background:white;
-border-radius:10px;
-padding:18px;
-box-shadow:0 3px 8px rgba(0,0,0,0.08);
+border-radius:8px;
+padding:15px;
 cursor:pointer;
-transition:0.2s;
-}
-
-.card:hover{
-transform:translateY(-3px);
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 .card h2{
 margin:5px 0;
-font-size:28px;
 }
-
-.card span{
-font-size:13px;
-color:#666;
-}
-
-/* COLORS */
 
 .orange{border-left:6px solid #ff7f0e;}
 .blue{border-left:6px solid #1f77b4;}
@@ -106,36 +79,33 @@ padding:20px;
 .alerts-panel{
 background:white;
 padding:15px;
-border-radius:10px;
-box-shadow:0 3px 8px rgba(0,0,0,0.08);
+border-radius:8px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 .alert-item{
 background:#fff3cd;
-padding:10px;
-margin:8px 0;
-border-left:5px solid #f1c40f;
-border-radius:6px;
-font-size:13px;
+padding:8px;
+margin:5px 0;
+border-radius:4px;
 }
 
-/* CONTENT PANEL */
+/* CONTENT */
 
 .content-panel{
 background:white;
 padding:20px;
-border-radius:10px;
-box-shadow:0 3px 8px rgba(0,0,0,0.08);
+border-radius:8px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* PROGRESS BAR */
+/* PROGRESS */
 
 .progress-bar{
 background:#ddd;
-height:22px;
-border-radius:12px;
+height:20px;
+border-radius:10px;
 overflow:hidden;
-margin-top:5px;
 }
 
 .progress-fill{
@@ -144,7 +114,6 @@ height:100%;
 text-align:center;
 color:white;
 font-size:12px;
-line-height:22px;
 }
 
 /* TABLE */
@@ -153,37 +122,21 @@ line-height:22px;
 width:100%;
 border-collapse:collapse;
 margin-top:20px;
-font-size:14px;
 }
 
 .status-table th{
-background:#f4f6fa;
+background:#f2f2f2;
 padding:10px;
-text-align:left;
 }
 
 .status-table td{
 padding:10px;
-border-bottom:1px solid #eee;
+border-bottom:1px solid #ddd;
 }
 
 .status-table tr:hover{
 background:#f9f9f9;
 }
-
-/* BADGE */
-
-.badge{
-padding:4px 8px;
-border-radius:5px;
-font-size:12px;
-color:white;
-}
-
-.badge-red{background:#d62728;}
-.badge-green{background:#2ecc71;}
-.badge-orange{background:#ff7f0e;}
-.badge-blue{background:#1f77b4;}
 
 </style>
 
@@ -193,86 +146,77 @@ color:white;
 
 <header class="top-nav">
 
-<div class="logo">🛢 Refinery Inspection System</div>
+<div>🛢 Refinery Shutdown Dashboard</div>
 
 <nav>
-<a href="dashboard.html">Dashboard</a>
+
+<a href="dashboard.html">Home</a>
 <a href="units.html">Units</a>
 <a href="equipment.html">Equipment</a>
-<a href="inspection.html">Inspection</a>
 <a href="reports.html">Reports</a>
+
 </nav>
+
+<button onclick="logout()">Logout</button>
 
 </header>
 
 
-<!-- KPI METRICS -->
+<!-- KPI CARDS -->
 
 <section class="metrics">
 
-<div class="card orange">
-<span>Total Units</span>
+<div class="card orange" onclick="goToUnits()">
+Total Units
 <h2 id="totalUnits">0</h2>
 </div>
 
-<div class="card blue">
-<span>Total Equipment</span>
+<div class="card blue" onclick="goToEquipment()">
+Total Equipment
 <h2 id="totalEquipment">0</h2>
 </div>
 
-<div class="card red">
-<span>Shutdown Equipment</span>
+<div class="card red" onclick="goToEquipment()">
+Shutdown Equipment
 <h2 id="shutdownCount">0</h2>
 </div>
 
-<div class="card yellow">
-<span>Pre-Cleaning Pending</span>
+<div class="card yellow" onclick="filterStatus('Offered for Pre-Cleaning Inspection')">
+Pre-Cleaning Pending
 <h2 id="preCleanCount">0</h2>
 </div>
 
-<div class="card green">
-<span>Post-Cleaning Inspection</span>
+<div class="card green" onclick="filterStatus('Offered for Post-Cleaning Inspection')">
+Post-Cleaning Offered
 <h2 id="postCleanCount">0</h2>
 </div>
 
-<div class="card purple">
-<span>NDT Pending</span>
+<div class="card purple" onclick="filterStatus('NDT Inspection')">
+NDT Pending
 <h2 id="ndtPending">0</h2>
 </div>
 
 </section>
 
 
-<!-- MAIN AREA -->
+<!-- MAIN -->
 
 <section class="main-layout">
 
-<!-- ALERT PANEL -->
-
 <aside class="alerts-panel">
 
-<h3>⚠ Critical Alerts</h3>
+<h3>Alerts & Notifications</h3>
 
-<div id="alertsContainer">
-
-<div class="alert-item">
-CDU-101 Inspection delayed by 3 days
-</div>
-
-<div class="alert-item">
-HCU-204 Waiting for NDT
-</div>
-
-</div>
+<div id="alertsContainer"></div>
 
 </aside>
 
 
-<!-- MAIN CONTENT -->
-
 <div class="content-panel">
 
-<h3>Shutdown Progress</h3>
+<h3>Equipment Shutdown Overview</h3>
+
+<label>Shutdown Progress</label>
 
 <div class="progress-bar">
 
@@ -280,45 +224,23 @@ HCU-204 Waiting for NDT
 
 </div>
 
-
-<h3 style="margin-top:25px">Equipment Inspection Status</h3>
-
 <table class="status-table">
 
 <thead>
 
 <tr>
-<th>Tag Number</th>
-<th>Unit</th>
+<th>Tag No</th>
 <th>Status</th>
-<th>Inspector</th>
-<th>Damage Photo</th>
-<th>NDT Report</th>
-<th>Delay</th>
+<th>Waiting Time</th>
+<th>Operation Status</th>
 </tr>
 
 </thead>
 
-<tbody id="equipmentTable">
+<tbody id="cduTableBody">
 
 <tr>
-<td>CDU-101</td>
-<td>CDU</td>
-<td><span class="badge badge-orange">Pre-Cleaning</span></td>
-<td>Inspector A</td>
-<td>📷 Uploaded</td>
-<td>-</td>
-<td>2 Days</td>
-</tr>
-
-<tr>
-<td>VDU-202</td>
-<td>VDU</td>
-<td><span class="badge badge-blue">NDT</span></td>
-<td>Inspector B</td>
-<td>📷 Uploaded</td>
-<td>📄 Uploaded</td>
-<td>0</td>
+<td colspan="4">Loading...</td>
 </tr>
 
 </tbody>
@@ -332,4 +254,5 @@ HCU-204 Waiting for NDT
 <script src="js/dashboard.js"></script>
 
 </body>
+
 </html>
