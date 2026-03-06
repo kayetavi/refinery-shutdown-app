@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Refinery Shutdown Dashboard</title>
 
 <link rel="stylesheet" href="css/style.css">
 
-<!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 </head>
 
+
 <body>
 
+
 <!-- ================= TOP NAV ================= -->
+
 <header class="top-nav">
 
 <div class="logo">🛢 Refinery Shutdown Dashboard</div>
@@ -35,7 +40,8 @@
 </header>
 
 
-<!-- ================= METRIC CARDS ================= -->
+
+<!-- ================= METRICS ================= -->
 
 <section class="metrics">
 
@@ -72,11 +78,13 @@
 </section>
 
 
-<!-- ================= MAIN GRID ================= -->
+
+<!-- ================= MAIN LAYOUT ================= -->
 
 <section class="main-layout">
 
-<!-- LEFT ALERTS -->
+<!-- ALERT PANEL -->
+
 <aside class="alerts-panel">
 
 <h3>Alerts & Notifications</h3>
@@ -86,34 +94,43 @@
 </aside>
 
 
-<!-- RIGHT CONTENT -->
+
+<!-- CONTENT PANEL -->
+
 <div class="content-panel">
 
-<h3>CDU Unit Details Overview</h3>
+<h3>Equipment Shutdown Overview</h3>
 
-<!-- Progress Bar -->
+
+<!-- PROGRESS -->
+
 <div class="progress-section">
 
-<label>CDU Unit Progress</label>
+<label>Shutdown Progress</label>
 
 <div class="progress-bar">
-<div class="progress-fill">0%</div>
-</div>
+
+<div class="progress-fill" id="progressFill">0%</div>
 
 </div>
 
+</div>
 
-<!-- Equipment Table -->
+
+
+<!-- EQUIPMENT TABLE -->
 
 <table class="status-table">
 
 <thead>
+
 <tr>
 <th>Tag No</th>
 <th>Status</th>
 <th>Waiting Time</th>
 <th>Operation Status</th>
 </tr>
+
 </thead>
 
 <tbody id="cduTableBody">
@@ -131,11 +148,12 @@
 </section>
 
 
+
 <script>
 
 
 
-// ================= SUPABASE CONFIG =================
+/* ================= SUPABASE ================= */
 
 const SUPABASE_URL = "https://lhktmcqjywduohrwsmzb.supabase.co";
 
@@ -148,7 +166,7 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 
-// ================= WAITING DAYS =================
+/* ================= WAITING DAYS ================= */
 
 function calculateWaitingDays(date){
 
@@ -162,7 +180,7 @@ return Math.floor(diff/(1000*60*60*24))+" Days";
 
 
 
-// ================= LOAD DASHBOARD =================
+/* ================= DASHBOARD METRICS ================= */
 
 async function loadDashboard(){
 
@@ -178,54 +196,45 @@ return;
 
 }
 
-if(!data) return;
-
-
-
 const totalEquipment = data.length;
-
 
 const totalUnits =
 [...new Set(data.map(e=>e.unit_id).filter(Boolean))].length;
 
-
 const shutdownCount =
 data.filter(e=>e.workflow_status!=="Closed").length;
-
 
 const preClean =
 data.filter(e=>e.workflow_status==="Offered for Pre-Cleaning Inspection").length;
 
-
 const postClean =
 data.filter(e=>e.workflow_status==="Offered for Post-Cleaning Inspection").length;
-
 
 const ndt =
 data.filter(e=>e.workflow_status==="NDT Inspection").length;
 
 
+document.getElementById("totalUnits").innerText = totalUnits;
 
-document.getElementById("totalUnits").innerText=totalUnits;
+document.getElementById("totalEquipment").innerText = totalEquipment;
 
-document.getElementById("totalEquipment").innerText=totalEquipment;
+document.getElementById("shutdownCount").innerText = shutdownCount;
 
-document.getElementById("shutdownCount").innerText=shutdownCount;
+document.getElementById("preCleanCount").innerText = preClean;
 
-document.getElementById("preCleanCount").innerText=preClean;
+document.getElementById("postCleanCount").innerText = postClean;
 
-document.getElementById("postCleanCount").innerText=postClean;
-
-document.getElementById("ndtPending").innerText=ndt;
-
+document.getElementById("ndtPending").innerText = ndt;
 
 
-// ===== PROGRESS =====
+
+/* PROGRESS */
 
 const completed =
 data.filter(e=>
-e.workflow_status==="Ready for Box-Up"||
-e.workflow_status==="Closed").length;
+e.workflow_status==="Ready for Box-Up" ||
+e.workflow_status==="Closed"
+).length;
 
 
 const percent =
@@ -233,7 +242,7 @@ totalEquipment===0 ? 0 :
 Math.round((completed/totalEquipment)*100);
 
 
-const bar = document.querySelector(".progress-fill");
+const bar = document.getElementById("progressFill");
 
 bar.style.width = percent+"%";
 
@@ -243,15 +252,14 @@ bar.innerText = percent+"%";
 
 
 
-// ================= LOAD CDU TABLE =================
+/* ================= LOAD EQUIPMENT TABLE ================= */
 
-async function loadCDUTable(){
+async function loadEquipmentTable(){
 
 const {data,error} = await supabaseClient
 .from("equipment")
-.select("tag_number,workflow_status,shutdown_date,unit_id")
-.eq("unit_id","CDU");
-
+.select("tag_number,workflow_status,shutdown_date")
+.order("tag_number",{ascending:true});
 
 const table = document.getElementById("cduTableBody");
 
@@ -266,10 +274,10 @@ return;
 
 }
 
-
 if(!data || data.length===0){
 
-table.innerHTML=`<tr>
+table.innerHTML = `
+<tr>
 <td colspan="4">No Equipment Found</td>
 </tr>`;
 
@@ -282,7 +290,7 @@ data.forEach(eq=>{
 
 table.innerHTML +=`
 
-<tr>
+<tr onclick="openEquipment('${eq.tag_number}')">
 
 <td>${eq.tag_number}</td>
 
@@ -302,7 +310,17 @@ table.innerHTML +=`
 
 
 
-// ================= LOAD ALERTS =================
+/* ================= OPEN EQUIPMENT ================= */
+
+function openEquipment(tag){
+
+window.location = "equipment-details.html?tag="+tag;
+
+}
+
+
+
+/* ================= ALERT SYSTEM ================= */
 
 async function loadAlerts(){
 
@@ -320,11 +338,8 @@ alertsBox.innerHTML="";
 const alertStatuses = [
 
 "Observation Raised",
-
 "Recommendation Issued",
-
 "NDT Inspection",
-
 "Maintenance Started"
 
 ];
@@ -332,13 +347,19 @@ const alertStatuses = [
 
 alertStatuses.forEach(status=>{
 
-const count = data.filter(e=>e.workflow_status===status).length;
+const count =
+data.filter(e=>e.workflow_status===status).length;
 
 if(count>0){
 
 alertsBox.innerHTML +=`
 
-<div class="alert-item red">
+<div style="
+background:#ef4444;
+color:white;
+padding:8px;
+margin-bottom:6px;
+border-radius:6px">
 
 ${status} (${count})
 
@@ -354,42 +375,43 @@ ${status} (${count})
 
 
 
-// ================= REAL TIME UPDATE =================
+/* ================= REALTIME UPDATE ================= */
 
 supabaseClient
-.channel("equipment-live")
-
+.channel("equipment-changes")
 .on(
 "postgres_changes",
 {event:"*",schema:"public",table:"equipment"},
-()=>{
+(payload)=>{
+
+console.log("Realtime Update:",payload);
 
 loadDashboard();
 
-loadCDUTable();
+loadEquipmentTable();
 
 loadAlerts();
 
 }
 )
-
 .subscribe();
 
 
 
-// ================= INITIAL LOAD =================
+/* ================= INITIAL LOAD ================= */
 
 document.addEventListener("DOMContentLoaded",()=>{
 
 loadDashboard();
 
-loadCDUTable();
+loadEquipmentTable();
 
 loadAlerts();
 
 });
 
 </script>
+
 
 </body>
 </html>
