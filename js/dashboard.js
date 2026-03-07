@@ -46,6 +46,8 @@ const diff = new Date() - new Date(date);
 
 const days = Math.floor(diff/(1000*60*60*24));
 
+if(days < 0) return "0 Days";
+
 return days + " Days";
 
 }
@@ -64,31 +66,22 @@ const {data,error} = await supabaseClient
 .select("*");
 
 if(error){
-
 console.error("Supabase error:",error);
 return;
-
 }
 
 if(!data || data.length === 0){
-
 console.log("No equipment data found");
 return;
-
 }
 
 const totalEquipment = data.length;
-
-
-// ✅ UNIT COUNT FIX
 
 const totalUnits =
 [...new Set(data.map(e => e.unit || e.unit_id).filter(Boolean))].length;
 
 
-// =======================================
 // STATUS COUNTS
-// =======================================
 
 const shutdownCount =
 data.filter(e => e.workflow_status !== "Closed").length;
@@ -103,9 +96,7 @@ const ndt =
 data.filter(e => e.workflow_status === "NDT Inspection").length;
 
 
-// =======================================
-// UPDATE KPI CARDS
-// =======================================
+// UPDATE KPI
 
 setText("totalUnits", totalUnits);
 setText("totalEquipment", totalEquipment);
@@ -115,9 +106,7 @@ setText("postCleanCount", postClean);
 setText("ndtPending", ndt);
 
 
-// =======================================
-// UPDATE PROGRESS
-// =======================================
+// PROGRESS
 
 calculateProgress(data);
 
@@ -176,10 +165,8 @@ const {data,error} = await supabaseClient
 .order("tag_number",{ascending:true});
 
 if(error){
-
 console.error("Equipment load error:",error);
 return;
-
 }
 
 const table =
@@ -213,9 +200,11 @@ const row = document.createElement("tr");
 
 row.style.cursor = "pointer";
 
+
+// ✅ FIXED NAVIGATION
 row.onclick = function(){
 
-openEquipment(eq.tag_number);
+openEquipment(eq.id);
 
 };
 
@@ -248,10 +237,10 @@ console.error("Equipment table error:",err);
 // EQUIPMENT DETAILS PAGE
 // =======================================
 
-function openEquipment(tag){
+function openEquipment(id){
 
 window.location.href =
-"equipment-details.html?tag=" + encodeURIComponent(tag);
+"equipment-details.html?id=" + encodeURIComponent(id);
 
 }
 
@@ -269,10 +258,8 @@ const {data,error} = await supabaseClient
 .select("workflow_status,tag_number");
 
 if(error){
-
 console.error(error);
 return;
-
 }
 
 const alertsBox =
@@ -349,7 +336,7 @@ loadAlerts();
 
 
 // =======================================
-// REALTIME UPDATE FROM SUPABASE
+// REALTIME UPDATE
 // =======================================
 
 supabaseClient
@@ -365,7 +352,7 @@ table:"equipment"
 
 console.log("Realtime update:",payload);
 
-reloadAll();
+reloadAll()
 
 })
 .subscribe();
@@ -389,15 +376,11 @@ reloadAll();
 // =======================================
 
 function goToUnits(){
-
 window.location.href = "units.html";
-
 }
 
 function goToEquipment(){
-
 window.location.href = "equipment.html";
-
 }
 
 function filterStatus(status){
