@@ -7,27 +7,34 @@ const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 const urlParams = new URLSearchParams(window.location.search);
 const equipmentId = urlParams.get("id");
 
+console.log("Equipment ID:", equipmentId);
+
+// page load
+if(equipmentId){
 loadEquipment();
+}else{
+alert("Equipment ID not found in URL");
+}
 
 
 // LOAD EQUIPMENT
 async function loadEquipment(){
 
-let { data, error } = await supabase
+const { data, error } = await supabase
 .from("equipment")
 .select("*")
 .eq("id", equipmentId)
 .single();
 
 if(error){
-console.log(error);
+console.log("Equipment Load Error:", error);
 return;
 }
 
-document.getElementById("tagNumber").innerText = data.tag_number;
-document.getElementById("unit").innerText = data.unit;
-document.getElementById("status").innerText = data.workflow_status;
-document.getElementById("shutdownDate").innerText = data.shutdown_date;
+document.getElementById("tagNumber").innerText = data.tag_number || "";
+document.getElementById("unit").innerText = data.unit || "";
+document.getElementById("status").innerText = data.workflow_status || "";
+document.getElementById("shutdownDate").innerText = data.shutdown_date || "";
 
 highlightTimeline(data.workflow_status);
 
@@ -42,14 +49,14 @@ async function updateStatus(){
 
 let status = document.getElementById("statusSelect").value;
 
-let { error } = await supabase
+const { error } = await supabase
 .from("equipment")
 .update({ workflow_status: status })
 .eq("id", equipmentId);
 
 if(error){
-alert("Update Failed");
-console.log(error);
+console.log("Status Update Error:", error);
+alert("Status update failed");
 return;
 }
 
@@ -69,7 +76,7 @@ steps.forEach(step=>{
 
 step.classList.remove("active");
 
-if(step.innerText.trim() == currentStatus){
+if(step.innerText.trim() === currentStatus){
 step.classList.add("active");
 }
 
@@ -83,12 +90,12 @@ async function saveObservation(){
 
 let text = document.getElementById("observationText").value;
 
-if(text == ""){
+if(!text){
 alert("Write Observation");
 return;
 }
 
-let { error } = await supabase
+const { error } = await supabase
 .from("observation")
 .insert([
 {
@@ -98,8 +105,8 @@ observation: text
 ]);
 
 if(error){
+console.log("Observation Save Error:", error);
 alert("Save Failed");
-console.log(error);
 return;
 }
 
@@ -113,7 +120,7 @@ loadObservation();
 // LOAD OBSERVATION
 async function loadObservation(){
 
-let { data, error } = await supabase
+const { data, error } = await supabase
 .from("observation")
 .select("*")
 .eq("equipment_id", equipmentId)
@@ -122,6 +129,11 @@ let { data, error } = await supabase
 let table = document.getElementById("observationHistory");
 
 table.innerHTML="";
+
+if(error){
+console.log("Observation Load Error:", error);
+return;
+}
 
 if(!data || data.length==0){
 table.innerHTML="<tr><td colspan='2'>No Observation</td></tr>";
@@ -148,13 +160,13 @@ async function saveRecommendation(){
 
 let text = document.getElementById("recommendationText").value;
 
-if(text==""){
+if(!text){
 alert("Write Recommendation");
 return;
 }
 
-let { error } = await supabase
-.from("recommendations")   // ✅ FIXED TABLE NAME
+const { error } = await supabase
+.from("recommendations")
 .insert([
 {
 equipment_id: equipmentId,
@@ -163,8 +175,8 @@ recommendation: text
 ]);
 
 if(error){
+console.log("Recommendation Save Error:", error);
 alert("Save Failed");
-console.log(error);
 return;
 }
 
@@ -178,8 +190,8 @@ loadRecommendation();
 // LOAD RECOMMENDATION
 async function loadRecommendation(){
 
-let { data, error } = await supabase
-.from("recommendations")   // ✅ FIXED TABLE NAME
+const { data, error } = await supabase
+.from("recommendations")
 .select("*")
 .eq("equipment_id", equipmentId)
 .order("created_at",{ascending:false});
@@ -187,6 +199,11 @@ let { data, error } = await supabase
 let table = document.getElementById("recommendationHistory");
 
 table.innerHTML="";
+
+if(error){
+console.log("Recommendation Load Error:", error);
+return;
+}
 
 if(!data || data.length==0){
 table.innerHTML="<tr><td colspan='2'>No Recommendation</td></tr>";
