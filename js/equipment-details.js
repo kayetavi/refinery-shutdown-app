@@ -1,15 +1,22 @@
+// =======================================
+// SUPABASE CONNECTION
+// =======================================
+
 const supabaseUrl = "https://lhktmcqjywduohrwsmzb.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxoa3RtY3FqeXdkdW9ocndzbXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODgzNzQsImV4cCI6MjA4ODI";
 
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// URL se equipment id lena
+
+// =======================================
+// GET EQUIPMENT ID FROM URL
+// =======================================
+
 const urlParams = new URLSearchParams(window.location.search);
 const equipmentId = urlParams.get("id");
 
 console.log("Equipment ID:", equipmentId);
 
-// page load
 if(equipmentId){
 loadEquipment();
 }else{
@@ -17,7 +24,10 @@ alert("Equipment ID not found in URL");
 }
 
 
+// =======================================
 // LOAD EQUIPMENT
+// =======================================
+
 async function loadEquipment(){
 
 const { data, error } = await supabase
@@ -31,10 +41,13 @@ console.log("Equipment Load Error:", error);
 return;
 }
 
-document.getElementById("tagNumber").innerText = data.tag_number || "";
-document.getElementById("unit").innerText = data.unit || "";
-document.getElementById("status").innerText = data.workflow_status || "";
-document.getElementById("shutdownDate").innerText = data.shutdown_date || "";
+document.getElementById("tagNumber").innerText = data.tag_number || "-";
+document.getElementById("unit").innerText = data.unit || "-";
+document.getElementById("status").innerText = data.workflow_status || "-";
+document.getElementById("shutdownDate").innerText = data.shutdown_date || "-";
+
+// dropdown auto select
+document.getElementById("statusSelect").value = data.workflow_status;
 
 highlightTimeline(data.workflow_status);
 
@@ -44,15 +57,19 @@ loadRecommendation();
 }
 
 
+// =======================================
 // UPDATE STATUS
+// =======================================
+
 async function updateStatus(){
 
 let status = document.getElementById("statusSelect").value;
 
-const { error } = await supabase
+const { data, error } = await supabase
 .from("equipment")
 .update({ workflow_status: status })
-.eq("id", equipmentId);
+.eq("id", equipmentId)
+.select();     // important
 
 if(error){
 console.log("Status Update Error:", error);
@@ -67,7 +84,10 @@ loadEquipment();
 }
 
 
+// =======================================
 // TIMELINE HIGHLIGHT
+// =======================================
+
 function highlightTimeline(currentStatus){
 
 let steps = document.querySelectorAll(".timeline-step");
@@ -85,24 +105,28 @@ step.classList.add("active");
 }
 
 
+// =======================================
 // SAVE OBSERVATION
+// =======================================
+
 async function saveObservation(){
 
-let text = document.getElementById("observationText").value;
+let text = document.getElementById("observationText").value.trim();
 
 if(!text){
 alert("Write Observation");
 return;
 }
 
-const { error } = await supabase
+const { data, error } = await supabase
 .from("observation")
 .insert([
 {
 equipment_id: equipmentId,
 observation: text
 }
-]);
+])
+.select();   // important
 
 if(error){
 console.log("Observation Save Error:", error);
@@ -117,7 +141,10 @@ loadObservation();
 }
 
 
+// =======================================
 // LOAD OBSERVATION
+// =======================================
+
 async function loadObservation(){
 
 const { data, error } = await supabase
@@ -155,24 +182,28 @@ table.appendChild(tr);
 }
 
 
+// =======================================
 // SAVE RECOMMENDATION
+// =======================================
+
 async function saveRecommendation(){
 
-let text = document.getElementById("recommendationText").value;
+let text = document.getElementById("recommendationText").value.trim();
 
 if(!text){
 alert("Write Recommendation");
 return;
 }
 
-const { error } = await supabase
+const { data, error } = await supabase
 .from("recommendations")
 .insert([
 {
 equipment_id: equipmentId,
 recommendation: text
 }
-]);
+])
+.select();   // important
 
 if(error){
 console.log("Recommendation Save Error:", error);
@@ -187,7 +218,10 @@ loadRecommendation();
 }
 
 
+// =======================================
 // LOAD RECOMMENDATION
+// =======================================
+
 async function loadRecommendation(){
 
 const { data, error } = await supabase
