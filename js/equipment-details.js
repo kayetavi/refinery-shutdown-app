@@ -24,7 +24,6 @@ console.log(error);
 return;
 }
 
-// COLUMN NAME FIX
 document.getElementById("tagNumber").innerText = data.tag_number;
 document.getElementById("unit").innerText = data.unit;
 document.getElementById("status").innerText = data.workflow_status;
@@ -155,7 +154,7 @@ return;
 }
 
 let { error } = await supabase
-.from("recommendation")
+.from("recommendations")   // ✅ FIXED TABLE NAME
 .insert([
 {
 equipment_id: equipmentId,
@@ -180,7 +179,7 @@ loadRecommendation();
 async function loadRecommendation(){
 
 let { data, error } = await supabase
-.from("recommendation")
+.from("recommendations")   // ✅ FIXED TABLE NAME
 .select("*")
 .eq("equipment_id", equipmentId)
 .order("created_at",{ascending:false});
