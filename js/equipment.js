@@ -42,13 +42,13 @@ data.forEach(eq=>{
 
 table.innerHTML+=`
 
-<tr onclick="openEquipment('${eq.tag_number}')">
+<tr onclick="openEquipment('${eq.id}')">
 
 <td>${eq.tag_number}</td>
 
 <td>${eq.workflow_status}</td>
 
-<td>${eq.shutdown_date}</td>
+<td>${eq.shutdown_date ? eq.shutdown_date.substring(0,10) : ""}</td>
 
 </tr>
 
@@ -59,10 +59,10 @@ table.innerHTML+=`
 }
 
 
-function openEquipment(tag){
+function openEquipment(id){
 
 window.location.href=
-"equipment-details.html?tag="+tag
+"equipment-details.html?id="+id
 
 }
 
